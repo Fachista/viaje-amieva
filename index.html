@@ -105,7 +105,7 @@
   <header>
     <h1>Viaje a Amieva (Asturias)</h1>
     <div class="sub">11 - 18 de julio 2026</div>
-    <div><span class='pill ok'>&#9679; precios de hoy (n/d)</span></div>
+    <div><span class='pill ok'>&#9679; precios de hoy (n/d)</span> <span id="syncBadge"></span></div>
   </header>
 
   <!-- INICIO -->
@@ -261,16 +261,39 @@
   <button onclick="showTab('t-plan',this)"><span class="ic">&#128506;</span>Plan</button>
   <button onclick="showTab('t-listas',this)"><span class="ic">&#128203;</span>Listas</button>
 </nav>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
 <script>
 const VIAJEROS = ["Yo","Daniel","David","Diego"];
 const SEED_CHECK = ["Zapatillas tipo escarpin (para las canoas)","Prenda de primavera (mananas frescas)","Banador","Crema solar","2 toallas (1 para ducharse + 1 para las canoas)","Solo 2 mochilas en total","Dinero en efectivo","Cargador movil","Cargador coche","Documentacion del coche y seguro","Botiquin basico","Calzado comodo para rutas","Bolsas de basura","Bocadillos para el piraguismo"];
 const SEED_RESERVAS = ["Reservar piraguismo en Cangas Aventura (35 EUR/persona, dura 2 a 4.5 h)","Confirmar horario y precio del teleferico de Fuentes De (17 EUR/persona, 30 min)","Mirar horario de la Basilica de Covadonga (5 EUR/persona)","Investigar restaurante para comer en Potes (dia 3)","Preguntar a Jorge que hay en la casa (sabanas, menaje, etc.)","Repostar lleno antes de subir a Amieva (la mas cercana esta lejos, en Prestin)"];
 const SEED_COMPRA = [{"item":"Leche entera","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Leche semidesnatada","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Cafe Nescafe","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Colacao","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Galletas con chocolate x2","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Salchichas","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Pan de perrito caliente","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Mayonesa","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Merienda (que no se derrita en el coche)","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Fruta / yogures","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Aceite","grupo":"Mercadona Arriondas (varios dias)"},{"item":"18 L de leche entera/semi","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Cereales","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Galletas","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Magdalenas","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Cruasanes","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Macarrones 2 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Tomate frito 3 L","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Cebollas 1 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Chorizo 1 manojo","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Queso rallado 3 bolsas","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Mix de frutos secos","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Ensalada mix 4 bolsas","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Picatostes x3","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Huevos x24","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Tomate 3 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Atun pack de 6","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Tortillas Mercadona x3","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Pan 4 barras","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Fuet x6","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Mayonesa x2","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Croquetas x3","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Nuggets x3","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Palitos fritos x3","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Patatas chips","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Patatas para freir 2 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Pizzas x6","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Arroz 2 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Pollo 1 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Pescado empanado 1 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Pimientos rellenos 1 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Nata 1 L","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Bacon 400 g","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Sal","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Queso parmesano 400 g","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Chicles","grupo":"Mercadona Arriondas (varios dias)"}];
 const PAGADOR = "Yo";
+const FB_CFG = {"apiKey":"AIzaSyDhVTqfbjWw1h_DkrAts_uwqDShLsOL4T8","authDomain":"viaje-amieva.firebaseapp.com","databaseURL":"https://viaje-amieva-default-rtdb.europe-west1.firebasedatabase.app","projectId":"viaje-amieva","storageBucket":"viaje-amieva.firebasestorage.app","messagingSenderId":"339209856321","appId":"1:339209856321:web:9fb9d73fc7512321d72dc0"};
 const eur = n => (Math.round(n*100)/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
-const K_GAS='viajeAmieva_gas2', K_SH='viajeAmieva_shared', K_MAL='viajeAmieva_maleta2';
-const K_RES='viajeAmieva_reservas', K_NOT='viajeAmieva_notas', K_COM='viajeAmieva_compra';
-const load=(k,def)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return v??def; }catch(e){ return def; } };
+const load=(k,def)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return (v===null||v===undefined)?def:v; }catch(e){ return def; } };
+
+/* Almacen compartido: Firebase si hay config; si no, solo este dispositivo */
+let DB=null;
+try{ if(FB_CFG && FB_CFG.databaseURL && typeof firebase!=='undefined'){ firebase.initializeApp(FB_CFG); DB=firebase.database().ref('viaje'); } }catch(e){ DB=null; }
+function bind(key, apply, seed){
+  if(DB){
+    DB.child(key).on('value', function(s){
+      var raw=s.val(), v;
+      if(raw===null||raw===undefined){ v=seed; try{ DB.child(key).set(JSON.stringify(seed)); }catch(e){} }
+      else { try{ v=JSON.parse(raw); }catch(e){ v=seed; } }
+      apply(v);
+    });
+  } else { apply(load('viajeAmieva_'+key, seed)); }
+}
+function persist(key, value){
+  if(DB){ try{ DB.child(key).set(JSON.stringify(value)); }catch(e){} }
+  else { localStorage.setItem('viajeAmieva_'+key, JSON.stringify(value)); }
+}
+function setSync(t,on){ var b=document.getElementById('syncBadge'); if(b){ b.textContent=t; b.className='pill '+(on?'ok':'warn'); } }
+if(DB){
+  setSync('● sincronizando...', false);
+  firebase.database().ref('.info/connected').on('value', function(s){ setSync(s.val()?'● sincronizado':'● sin conexion', !!s.val()); });
+}
 
 function showTab(id, btn){
   document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('active', s.id===id));
@@ -287,8 +310,8 @@ function showLista(id, btn){
 }
 
 /* ---- Gasolina (la pone PAGADOR, se divide entre todos) ---- */
-let repos = load(K_GAS, []);
-function saveGas(){ localStorage.setItem(K_GAS, JSON.stringify(repos)); }
+let repos = [];
+function saveGas(){ persist('gastos', repos); }
 function addGas(){
   const con=document.getElementById('gas-con').value.trim()||'Repostaje';
   const imp=parseFloat(document.getElementById('gas-imp').value);
@@ -317,8 +340,8 @@ function renderComida(){
 }
 
 /* ---- Gastos compartidos (excepciones) ---- */
-let shared = load(K_SH, []);
-function saveSh(){ localStorage.setItem(K_SH, JSON.stringify(shared)); }
+let shared = [];
+function saveSh(){ persist('shared', shared); }
 document.getElementById('sh-pag').innerHTML='<option value="">quien pago</option>'+VIAJEROS.map(v=>'<option>'+v+'</option>').join('');
 function addShared(){
   const con=document.getElementById('sh-con').value.trim();
@@ -360,10 +383,9 @@ function liquidar(saldos){
 
 /* ---- Maleta editable ---- */
 const OWNERS = VIAJEROS.concat(['Comun']);
-let maleta = load(K_MAL, null);
-if(!Array.isArray(maleta)){ maleta = SEED_CHECK.map(x=>({item:x, quien:'Comun', ok:false})); localStorage.setItem(K_MAL, JSON.stringify(maleta)); }
+let maleta = [];
 let filtro='Todos';
-function saveMal(){ localStorage.setItem(K_MAL, JSON.stringify(maleta)); }
+function saveMal(){ persist('maleta', maleta); }
 document.getElementById('m-quien').innerHTML=OWNERS.map(v=>'<option'+(v==='Comun'?' selected':'')+'>'+v+'</option>').join('');
 function addItem(){
   const it=document.getElementById('m-item').value.trim();
@@ -401,9 +423,8 @@ function renderMaleta(){
 }
 
 /* ---- Compra (lista del viaje, agrupada y marcable) ---- */
-let compra = load(K_COM, null);
-if(!Array.isArray(compra)){ compra = SEED_COMPRA.map(x=>({item:x.item, grupo:x.grupo, ok:false})); localStorage.setItem(K_COM, JSON.stringify(compra)); }
-function saveCom(){ localStorage.setItem(K_COM, JSON.stringify(compra)); }
+let compra = [];
+function saveCom(){ persist('compra', compra); }
 const GRUPOS = SEED_COMPRA.reduce((a,x)=>{ if(!a.includes(x.grupo))a.push(x.grupo); return a; }, []);
 document.getElementById('c-grupo').innerHTML=GRUPOS.map(g=>'<option>'+g+'</option>').join('');
 function addCompra(){
@@ -436,9 +457,8 @@ function renderCompra(){
 }
 
 /* ---- Antes de salir (reservas) ---- */
-let reservas = load(K_RES, null);
-if(!Array.isArray(reservas)){ reservas = SEED_RESERVAS.map(x=>({item:x, ok:false})); localStorage.setItem(K_RES, JSON.stringify(reservas)); }
-function saveRes(){ localStorage.setItem(K_RES, JSON.stringify(reservas)); }
+let reservas = [];
+function saveRes(){ persist('reservas', reservas); }
 function toggleRes(i){ reservas[i].ok=!reservas[i].ok; saveRes(); renderRes(); }
 function renderRes(){
   const list=document.getElementById('res-list'); list.innerHTML='';
@@ -452,12 +472,11 @@ function renderRes(){
 
 /* ---- Notas ---- */
 const ta=document.getElementById('notas');
-ta.value = load(K_NOT, '') || '';
-ta.addEventListener('input', ()=>localStorage.setItem(K_NOT, JSON.stringify(ta.value)));
+ta.addEventListener('input', ()=>persist('notas', ta.value));
 
-/* ---- Editar textos del plan (se guardan en este dispositivo) ---- */
-let editing=false;
-function applyEdits(){ document.querySelectorAll('.ed').forEach(e=>{ const v=localStorage.getItem('ed_'+e.dataset.k); if(v!==null) e.innerText=v; }); }
+/* ---- Editar textos del plan (compartido) ---- */
+let editing=false, edits={};
+function applyEdits(){ document.querySelectorAll('.ed').forEach(e=>{ const v=edits[e.dataset.k]; if(v!=null && document.activeElement!==e) e.innerText=v; }); }
 function toggleEdit(){
   editing=!editing;
   document.querySelectorAll('.ed').forEach(e=>{ e.contentEditable = editing?'true':'false'; });
@@ -465,10 +484,18 @@ function toggleEdit(){
   document.getElementById('editBtn').innerHTML = editing ? '&#10003; Hecho' : '&#9999;&#65039; Editar';
   document.getElementById('resetEdit').style.display = editing ? '' : 'none';
 }
-document.addEventListener('input', e=>{ const t=e.target; if(t.classList && t.classList.contains('ed')){ localStorage.setItem('ed_'+t.dataset.k, t.innerText); } });
-function resetEdits(){ if(confirm('Borrar tus cambios y volver al plan original?')){ document.querySelectorAll('.ed').forEach(e=>localStorage.removeItem('ed_'+e.dataset.k)); location.reload(); } }
+document.addEventListener('input', e=>{ const t=e.target; if(t.classList && t.classList.contains('ed')){ edits[t.dataset.k]=t.innerText; persist('edits', edits); } });
+function resetEdits(){ if(confirm('Borrar los cambios del plan y volver al original?')){ edits={}; persist('edits', edits); location.reload(); } }
 
-renderGas(); renderComida(); renderSh(); renderMaleta(); renderCompra(); renderRes(); applyEdits();
+/* Arranque: enlaza cada parte al almacen (Firebase o local) */
+renderComida();
+bind('gastos',   function(v){ repos=Array.isArray(v)?v:[]; renderGas(); },     []);
+bind('shared',   function(v){ shared=Array.isArray(v)?v:[]; renderSh(); },      []);
+bind('maleta',   function(v){ maleta=Array.isArray(v)?v:[]; renderMaleta(); },  SEED_CHECK.map(x=>({item:x,quien:'Comun',ok:false})));
+bind('compra',   function(v){ compra=Array.isArray(v)?v:[]; renderCompra(); },  SEED_COMPRA.map(x=>({item:x.item,grupo:x.grupo,ok:false})));
+bind('reservas', function(v){ reservas=Array.isArray(v)?v:[]; renderRes(); },   SEED_RESERVAS.map(x=>({item:x,ok:false})));
+bind('notas',    function(v){ if(document.activeElement!==ta) ta.value=(typeof v==='string')?v:''; }, '');
+bind('edits',    function(v){ edits=(v&&typeof v==='object'&&!Array.isArray(v))?v:{}; applyEdits(); }, {});
 </script>
 </body>
 </html>
