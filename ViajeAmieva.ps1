@@ -488,7 +488,7 @@ function Build-Html {
   <header>
     <h1>$(HtmlEnc $Data.titulo)</h1>
     <div class="sub">$(HtmlEnc $Data.fechas)</div>
-    <div>$apiBadge</div>
+    <div>$apiBadge <span id="syncBadge"></span></div>
   </header>
 
   <!-- INICIO -->
@@ -653,10 +653,32 @@ const SEED_CHECK = __CHECK__;
 const SEED_RESERVAS = __RESERVAS__;
 const SEED_COMPRA = __COMPRA__;
 const PAGADOR = __PAGADOR__;
+const FB_CFG = __FIREBASE__;
 const eur = n => (Math.round(n*100)/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
-const K_GAS='viajeAmieva_gas2', K_SH='viajeAmieva_shared', K_MAL='viajeAmieva_maleta2';
-const K_RES='viajeAmieva_reservas', K_NOT='viajeAmieva_notas', K_COM='viajeAmieva_compra';
-const load=(k,def)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return v??def; }catch(e){ return def; } };
+const load=(k,def)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return (v===null||v===undefined)?def:v; }catch(e){ return def; } };
+
+/* Almacen compartido: Firebase si hay config; si no, solo este dispositivo */
+let DB=null;
+try{ if(FB_CFG && FB_CFG.databaseURL && typeof firebase!=='undefined'){ firebase.initializeApp(FB_CFG); DB=firebase.database().ref('viaje'); } }catch(e){ DB=null; }
+function bind(key, apply, seed){
+  if(DB){
+    DB.child(key).on('value', function(s){
+      var raw=s.val(), v;
+      if(raw===null||raw===undefined){ v=seed; try{ DB.child(key).set(JSON.stringify(seed)); }catch(e){} }
+      else { try{ v=JSON.parse(raw); }catch(e){ v=seed; } }
+      apply(v);
+    });
+  } else { apply(load('viajeAmieva_'+key, seed)); }
+}
+function persist(key, value){
+  if(DB){ try{ DB.child(key).set(JSON.stringify(value)); }catch(e){} }
+  else { localStorage.setItem('viajeAmieva_'+key, JSON.stringify(value)); }
+}
+function setSync(t,on){ var b=document.getElementById('syncBadge'); if(b){ b.textContent=t; b.className='pill '+(on?'ok':'warn'); } }
+if(DB){
+  setSync('● sincronizando...', false);
+  firebase.database().ref('.info/connected').on('value', function(s){ setSync(s.val()?'● sincronizado':'● sin conexion', !!s.val()); });
+}
 
 function showTab(id, btn){
   document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('active', s.id===id));
@@ -673,8 +695,8 @@ function showLista(id, btn){
 }
 
 /* ---- Gasolina (la pone PAGADOR, se divide entre todos) ---- */
-let repos = load(K_GAS, []);
-function saveGas(){ localStorage.setItem(K_GAS, JSON.stringify(repos)); }
+let repos = [];
+function saveGas(){ persist('gastos', repos); }
 function addGas(){
   const con=document.getElementById('gas-con').value.trim()||'Repostaje';
   const imp=parseFloat(document.getElementById('gas-imp').value);
@@ -703,8 +725,8 @@ function renderComida(){
 }
 
 /* ---- Gastos compartidos (excepciones) ---- */
-let shared = load(K_SH, []);
-function saveSh(){ localStorage.setItem(K_SH, JSON.stringify(shared)); }
+let shared = [];
+function saveSh(){ persist('shared', shared); }
 document.getElementById('sh-pag').innerHTML='<option value="">quien pago</option>'+VIAJEROS.map(v=>'<option>'+v+'</option>').join('');
 function addShared(){
   const con=document.getElementById('sh-con').value.trim();
@@ -746,10 +768,9 @@ function liquidar(saldos){
 
 /* ---- Maleta editable ---- */
 const OWNERS = VIAJEROS.concat(['Comun']);
-let maleta = load(K_MAL, null);
-if(!Array.isArray(maleta)){ maleta = SEED_CHECK.map(x=>({item:x, quien:'Comun', ok:false})); localStorage.setItem(K_MAL, JSON.stringify(maleta)); }
+let maleta = [];
 let filtro='Todos';
-function saveMal(){ localStorage.setItem(K_MAL, JSON.stringify(maleta)); }
+function saveMal(){ persist('maleta', maleta); }
 document.getElementById('m-quien').innerHTML=OWNERS.map(v=>'<option'+(v==='Comun'?' selected':'')+'>'+v+'</option>').join('');
 function addItem(){
   const it=document.getElementById('m-item').value.trim();
@@ -787,9 +808,8 @@ function renderMaleta(){
 }
 
 /* ---- Compra (lista del viaje, agrupada y marcable) ---- */
-let compra = load(K_COM, null);
-if(!Array.isArray(compra)){ compra = SEED_COMPRA.map(x=>({item:x.item, grupo:x.grupo, ok:false})); localStorage.setItem(K_COM, JSON.stringify(compra)); }
-function saveCom(){ localStorage.setItem(K_COM, JSON.stringify(compra)); }
+let compra = [];
+function saveCom(){ persist('compra', compra); }
 const GRUPOS = SEED_COMPRA.reduce((a,x)=>{ if(!a.includes(x.grupo))a.push(x.grupo); return a; }, []);
 document.getElementById('c-grupo').innerHTML=GRUPOS.map(g=>'<option>'+g+'</option>').join('');
 function addCompra(){
@@ -822,9 +842,8 @@ function renderCompra(){
 }
 
 /* ---- Antes de salir (reservas) ---- */
-let reservas = load(K_RES, null);
-if(!Array.isArray(reservas)){ reservas = SEED_RESERVAS.map(x=>({item:x, ok:false})); localStorage.setItem(K_RES, JSON.stringify(reservas)); }
-function saveRes(){ localStorage.setItem(K_RES, JSON.stringify(reservas)); }
+let reservas = [];
+function saveRes(){ persist('reservas', reservas); }
 function toggleRes(i){ reservas[i].ok=!reservas[i].ok; saveRes(); renderRes(); }
 function renderRes(){
   const list=document.getElementById('res-list'); list.innerHTML='';
@@ -838,12 +857,11 @@ function renderRes(){
 
 /* ---- Notas ---- */
 const ta=document.getElementById('notas');
-ta.value = load(K_NOT, '') || '';
-ta.addEventListener('input', ()=>localStorage.setItem(K_NOT, JSON.stringify(ta.value)));
+ta.addEventListener('input', ()=>persist('notas', ta.value));
 
-/* ---- Editar textos del plan (se guardan en este dispositivo) ---- */
-let editing=false;
-function applyEdits(){ document.querySelectorAll('.ed').forEach(e=>{ const v=localStorage.getItem('ed_'+e.dataset.k); if(v!==null) e.innerText=v; }); }
+/* ---- Editar textos del plan (compartido) ---- */
+let editing=false, edits={};
+function applyEdits(){ document.querySelectorAll('.ed').forEach(e=>{ const v=edits[e.dataset.k]; if(v!=null && document.activeElement!==e) e.innerText=v; }); }
 function toggleEdit(){
   editing=!editing;
   document.querySelectorAll('.ed').forEach(e=>{ e.contentEditable = editing?'true':'false'; });
@@ -851,15 +869,33 @@ function toggleEdit(){
   document.getElementById('editBtn').innerHTML = editing ? '&#10003; Hecho' : '&#9999;&#65039; Editar';
   document.getElementById('resetEdit').style.display = editing ? '' : 'none';
 }
-document.addEventListener('input', e=>{ const t=e.target; if(t.classList && t.classList.contains('ed')){ localStorage.setItem('ed_'+t.dataset.k, t.innerText); } });
-function resetEdits(){ if(confirm('Borrar tus cambios y volver al plan original?')){ document.querySelectorAll('.ed').forEach(e=>localStorage.removeItem('ed_'+e.dataset.k)); location.reload(); } }
+document.addEventListener('input', e=>{ const t=e.target; if(t.classList && t.classList.contains('ed')){ edits[t.dataset.k]=t.innerText; persist('edits', edits); } });
+function resetEdits(){ if(confirm('Borrar los cambios del plan y volver al original?')){ edits={}; persist('edits', edits); location.reload(); } }
 
-renderGas(); renderComida(); renderSh(); renderMaleta(); renderCompra(); renderRes(); applyEdits();
+/* Arranque: enlaza cada parte al almacen (Firebase o local) */
+renderComida();
+bind('gastos',   function(v){ repos=Array.isArray(v)?v:[]; renderGas(); },     []);
+bind('shared',   function(v){ shared=Array.isArray(v)?v:[]; renderSh(); },      []);
+bind('maleta',   function(v){ maleta=Array.isArray(v)?v:[]; renderMaleta(); },  SEED_CHECK.map(x=>({item:x,quien:'Comun',ok:false})));
+bind('compra',   function(v){ compra=Array.isArray(v)?v:[]; renderCompra(); },  SEED_COMPRA.map(x=>({item:x.item,grupo:x.grupo,ok:false})));
+bind('reservas', function(v){ reservas=Array.isArray(v)?v:[]; renderRes(); },   SEED_RESERVAS.map(x=>({item:x,ok:false})));
+bind('notas',    function(v){ if(document.activeElement!==ta) ta.value=(typeof v==='string')?v:''; }, '');
+bind('edits',    function(v){ edits=(v&&typeof v==='object'&&!Array.isArray(v))?v:{}; applyEdits(); }, {});
 </script>
 '@
 
-  $script = $script.Replace('__VIAJEROS__', $viajerosJs).Replace('__CHECK__', $checklistJs).Replace('__RESERVAS__', $reservasJs).Replace('__COMPRA__', $compraJs).Replace('__PAGADOR__', ($pagador | ConvertTo-Json))
-  $full = $html + "`r`n" + $script + "`r`n</body>`r`n</html>`r`n"
+  # Firebase: si datos.json trae config con databaseURL, se inyecta el SDK y la config
+  $fbCfg = $null
+  if ($Data.PSObject.Properties['firebase']) { $fbCfg = $Data.firebase }
+  $fbOk = ($fbCfg -and $fbCfg.PSObject.Properties['databaseURL'] -and "$($fbCfg.databaseURL)".Trim() -ne '')
+  $fbJs = if ($fbOk) { ($fbCfg | ConvertTo-Json -Compress) } else { 'null' }
+  $fbScripts = if ($fbOk) {
+    '<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>' +
+    '<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>'
+  } else { '' }
+
+  $script = $script.Replace('__VIAJEROS__', $viajerosJs).Replace('__CHECK__', $checklistJs).Replace('__RESERVAS__', $reservasJs).Replace('__COMPRA__', $compraJs).Replace('__PAGADOR__', ($pagador | ConvertTo-Json)).Replace('__FIREBASE__', $fbJs)
+  $full = $html + "`r`n" + $fbScripts + "`r`n" + $script + "`r`n</body>`r`n</html>`r`n"
   $full | Set-Content -Path $HtmlPath -Encoding UTF8
 }
 

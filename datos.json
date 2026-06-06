@@ -15,6 +15,15 @@
   "litrosPorRepostaje": 35,
   "comidaEstimado": 175,
   "precioGasolinaFallback": 1.45,
+  "firebase": {
+    "apiKey": "AIzaSyDhVTqfbjWw1h_DkrAts_uwqDShLsOL4T8",
+    "authDomain": "viaje-amieva.firebaseapp.com",
+    "databaseURL": "https://viaje-amieva-default-rtdb.europe-west1.firebasedatabase.app",
+    "projectId": "viaje-amieva",
+    "storageBucket": "viaje-amieva.firebasestorage.app",
+    "messagingSenderId": "339209856321",
+    "appId": "1:339209856321:web:9fb9d73fc7512321d72dc0"
+  },
   "rutaNota": "Peajes: por AUTOPISTA ~30 EUR ida y vuelta (peajes incluidos). Por AUTOVIA (gratis) 10-15 EUR pero 1 h mas de viaje. La gasolina del coche va aparte (ver estimacion abajo).",
   "paradas": [
     { "nombre": "Logrono - Alcampo Parque Rioja (echar + comprar cena dia 0)", "prov": "26", "lat": 42.4627, "lon": -2.4449, "radioKm": 9 },
