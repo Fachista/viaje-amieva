@@ -1,0 +1,456 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Viaje Amieva">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Viaje a Amieva (Asturias)</title>
+<style>
+  :root{--bg:#eef2f9;--card:#fff;--ink:#15233d;--mut:#64748b;--line:#e7ecf5;--ac:#2563eb;--acs:#dbe6ff;--gd:#16a34a;--gds:#dcfce7;--bad:#e11d48;--bads:#ffe4ea;--wn:#b45309}
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+  .wrap{max-width:760px;margin:0 auto;padding:16px 16px 92px}
+  header{text-align:center;padding:8px 0 4px}
+  header h1{margin:0;font-size:23px}
+  header .sub{color:var(--mut);font-size:14px;margin-top:2px}
+  .pill{display:inline-block;font-size:12px;padding:4px 10px;border-radius:20px;margin-top:8px;font-weight:600}
+  .pill.ok{background:var(--gds);color:var(--gd)} .pill.warn{background:#fff3d6;color:var(--wn)}
+  nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:1px solid var(--line);display:flex;box-shadow:0 -4px 16px rgba(20,35,61,.07)}
+  nav.tabs button{flex:1;border:none;background:none;padding:8px 2px 10px;font-size:11px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-weight:600}
+  nav.tabs button .ic{font-size:20px;line-height:1}
+  nav.tabs button.active{color:var(--ac)}
+  section.tab{display:none;animation:fade .2s}
+  section.tab.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  h2{font-size:14px;margin:18px 2px 10px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(20,35,61,.04)}
+  .hero{text-align:center;background:linear-gradient(135deg,#2563eb,#4f86ff);color:#fff;border:none}
+  .hero .cd{font-size:30px;font-weight:800} .hero .big{opacity:.92;font-size:14px;margin-top:2px}
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(20,35,61,.04)}
+  .kpi .v{font-size:21px;font-weight:800;color:var(--ac)} .kpi .l{font-size:12px;color:var(--mut);margin-top:2px}
+  .lead{background:var(--gds);border:1px solid #bbf7d0;border-radius:14px;padding:12px 14px;font-size:14px}
+  .lead .t{font-size:12px;color:var(--gd);font-weight:700;text-transform:uppercase}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:8px 6px;text-align:left;border-top:1px solid var(--line);vertical-align:top}
+  th{color:var(--mut);font-weight:600;font-size:12px;border-top:none}
+  .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .dir{color:var(--mut);font-size:12px}
+  .muted,.mut{color:var(--mut)} .gd{color:var(--gd);font-weight:600} .bad{color:var(--bad);font-weight:600}
+  .zona{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+  .zona-n{font-weight:700;font-size:15px;margin-bottom:6px}
+  .zona-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .zona-sub{font-size:14px} .zona-meta{color:var(--mut);font-size:13px;margin-top:2px}
+  .precio{font-size:22px;font-weight:800;color:var(--gd);white-space:nowrap}
+  .precio span{font-size:12px;font-weight:600;color:var(--mut);margin-left:2px}
+  .maplink{display:inline-block;margin-top:4px;color:var(--ac);font-weight:600;font-size:13px;text-decoration:none}
+  .vermas{margin-top:8px;background:none;border:none;color:var(--ac);font-weight:600;font-size:13px;cursor:pointer;padding:0}
+  .mas{display:none;margin-top:6px} .zona.show .mas{display:block}
+  .dia{border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+  .dia-h{width:100%;background:#fff;border:none;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;text-align:left}
+  .dia-f{font-weight:700;font-size:15px} .dia-t{color:var(--mut);font-size:13px;margin-top:2px}
+  .chev{font-size:22px;color:var(--mut);transition:transform .2s} .dia.open .chev{transform:rotate(90deg)}
+  .dia-b{display:none;padding:0 14px 14px} .dia.open .dia-b{display:block}
+  .dia-b p{margin:8px 0;font-size:14px}
+  .lab{display:inline-block;background:var(--acs);color:var(--ac);font-size:11px;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:6px;margin-right:6px}
+  .comidas{margin-top:10px;border-top:1px dashed var(--line);padding-top:10px;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mut)}
+  .hero2{text-align:center;background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;border:none}
+  .hero2 .v{font-size:32px;font-weight:800} .hero2 .l{opacity:.92;font-size:13px}
+  .addrow{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+  input,select{font-size:15px;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{outline:2px solid var(--acs);border-color:var(--ac)}
+  .addrow input.con{flex:1;min-width:130px} .addrow input.imp{width:84px;text-align:right}
+  button.add{background:var(--ac);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:18px;line-height:1;cursor:pointer}
+  .line{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+  .line .gc{flex:1;font-size:14px} .line .gv{font-weight:700;white-space:nowrap}
+  .line select.own{padding:6px 8px;font-size:13px}
+  .line .gx{background:none;border:none;color:var(--bad);font-size:20px;cursor:pointer;padding:2px 6px}
+  .hint{font-size:13px;color:var(--mut);margin:0 0 8px}
+  .fold>summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--ac);list-style:none}
+  .fold>summary::-webkit-details-marker{display:none}
+  .fold[open]>summary{margin-bottom:8px}
+  .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--acs);color:var(--ac);white-space:nowrap}
+  .tag.comun{background:var(--line);color:var(--mut)}
+  .prog{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:6px 0 12px}
+  .prog div{height:100%;background:var(--gd);width:0;transition:width .25s}
+  .done{opacity:.45;text-decoration:line-through}
+  .chk-item{display:flex;align-items:center;gap:10px;padding:11px 2px;border-top:1px solid var(--line)}
+  .chk-item:first-child{border-top:none}
+  .chk-item input[type=checkbox]{width:22px;height:22px;flex:none}
+  .chk-item .txt{flex:1;font-size:15px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .chips button{border:1px solid var(--line);background:#fff;color:var(--mut);border-radius:20px;padding:5px 12px;font-size:13px;cursor:pointer;font-weight:600}
+  .chips button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+  .wgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .wday{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center}
+  .wday.off{opacity:.6} .wd-f{font-size:12px;font-weight:700} .wd-i{font-size:22px;margin:2px 0} .wd-t{font-size:12px;font-weight:600} .wd-r{font-size:10px;color:var(--mut)}
+  .sitio{display:flex;justify-content:space-between;align-items:center;padding:11px 2px;border-top:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:14px;font-weight:600}
+  .sitio:first-child{border-top:none} .sitio span{color:var(--mut);font-size:18px}
+  textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font-family:inherit;font-size:15px;min-height:110px;resize:vertical;color:var(--ink)}
+  textarea:focus{outline:2px solid var(--acs);border-color:var(--ac)}
+  .grupo{font-size:12px;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:.03em;margin:14px 0 2px}
+  .grupo:first-of-type{margin-top:4px}
+  footer{text-align:center;color:var(--mut);font-size:12px;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Viaje a Amieva (Asturias)</h1>
+    <div class="sub">11 - 18 de julio 2026</div>
+    <div><span class='pill ok'>&#9679; precios de hoy (06/06/2026 15:36:03)</span></div>
+  </header>
+
+  <!-- INICIO -->
+  <section id="t-inicio" class="tab active">
+    <div class="card hero">
+      <div class="cd">Faltan 35 dias</div>
+      <div class="big">Nissan Micra Sport K2 2008 &middot; Gasolina 95</div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="v">657 km</div><div class="l">autonomia deposito lleno</div></div>
+      <div class="kpi"><div class="v">114 &euro;</div><div class="l">gasolina ida y vuelta aprox</div></div>
+      <div class="kpi"><div class="v">8</div><div class="l">dias de viaje</div></div>
+      <div class="kpi"><div class="v">1.339</div><div class="l">&euro;/L mas barato ruta</div></div>
+    </div>
+    <h2>Mejor sitio para repostar ahora</h2>
+    <div class="card"><div class="lead"><div class="t">mas barata de la ruta</div><b>PLENERGY</b> en Logro&#241;o &middot; <b>1.339 &euro;/L</b></div></div>
+
+    <h2>El tiempo en Amieva</h2>
+    <div class="card">
+      <div class="wgrid"><div class='wday off'><div class='wd-f'>Sab 11</div><div class='wd-i'>&middot;&middot;&middot;</div><div class='wd-t muted' style='font-size:11px'>lejos</div></div><div class='wday off'><div class='wd-f'>Dom 12</div><div class='wd-i'>&middot;&middot;&middot;</div><div class='wd-t muted' style='font-size:11px'>lejos</div></div><div class='wday off'><div class='wd-f'>Lun 13</div><div class='wd-i'>&middot;&middot;&middot;</div><div class='wd-t muted' style='font-size:11px'>lejos</div></div><div class='wday off'><div class='wd-f'>Mar 14</div><div class='wd-i'>&middot;&middot;&middot;</div><div class='wd-t muted' style='font-size:11px'>lejos</div></div><div class='wday off'><div class='wd-f'>Mie 15</div><div class='wd-i'>&middot;&middot;&middot;</div><div class='wd-t muted' style='font-size:11px'>lejos</div></div><div class='wday off'><div class='wd-f'>Jue 16</div><div class='wd-i'>&middot;&middot;&middot;</div><div class='wd-t muted' style='font-size:11px'>lejos</div></div><div class='wday off'><div class='wd-f'>Vie 17</div><div class='wd-i'>&middot;&middot;&middot;</div><div class='wd-t muted' style='font-size:11px'>lejos</div></div><div class='wday off'><div class='wd-f'>Sab 18</div><div class='wd-i'>&middot;&middot;&middot;</div><div class='wd-t muted' style='font-size:11px'>lejos</div></div></div>
+      <p class='hint' style='margin:10px 0 0'>La prevision aparece cuando faltan ~15 dias. Vuelve a abrir el panel mas cerca de la fecha.</p>
+    </div>
+
+    <h2>Antes de salir</h2>
+    <div class="card"><div id="res-list"></div></div>
+
+    <h2>Notas</h2>
+    <div class="card"><textarea id="notas" placeholder="Apunta aqui cualquier cosa: ideas, lo que falta, lo que diga Jorge..."></textarea></div>
+
+    <h2>La casa</h2>
+    <div class="card">
+      <div class="mut" style="font-size:14px">Casa en Asturias (Amieva) - Anfitrion: Jorge - Entrada sab 11 despues 17:00, salida sab 18 antes 11:00</div>
+    </div>
+
+    <details class="card fold">
+      <summary>Como usarla en el movil</summary>
+      <p class="hint" style="margin-top:8px">1. Abre este archivo (index.html) en el movil (te lo envias por WhatsApp/Telegram o lo abres desde Drive).<br>2. En el menu de Chrome (3 puntos) pulsa <b>Anadir a pantalla de inicio</b>: queda como una app.<br>3. Pasaselo igual a tu copiloto para que siga el plan.<br>Funciona sin internet (salvo abrir Maps). Para precios y tiempo al dia, vuelve a generar el panel en el PC y reenvialo.</p>
+    </details>
+  </section>
+
+  <!-- GASOLINA -->
+  <section id="t-gas" class="tab">
+    <h2>Donde repostar (95)</h2>
+    <p class="hint" style="margin:0 2px 10px">En cada parada te marco la mejor opcion teniendo en cuenta el desvio: si una mas barata esta lejos y no compensa el gasto de ir, no la recomiendo. Calculo pensando en repostar unos 35 L.</p>
+    <div class="card" style="padding:14px">
+      <div class='zona'><div class='zona-n'>Logrono - Alcampo Parque Rioja (echar + comprar cena dia 0)</div><div class='zona-top'><div><div class='zona-sub'><b>PLENERGY</b> &middot; Logro&#241;o</div><div class='zona-meta'>de paso</div><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.472583,-2.416944' target='_blank'>Abrir en Maps &rsaquo;</a></div><div class='precio'>1.339<span>&euro;/L</span></div></div><button class='vermas' onclick='toggleNext(this)'>Ver otras 5</button><div class='mas'><table><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.47425,-2.403389' target='_blank'>PLENERGY</a><div class='dir'>Logro&#241;o &middot; +1 km <span class='muted'>casi igual</span></div></td><td class='num'>1.339</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.456528,-2.403111' target='_blank'>PETROPRIX</a><div class='dir'>Logro&#241;o &middot; +1 km <span class='bad'>no compensa</span></div></td><td class='num'>1.359</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.453528,-2.467861' target='_blank'>ALCAMPO</a><div class='dir'>Logro&#241;o &middot; de paso </div></td><td class='num'>1.379</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.45725,-2.395083' target='_blank'>EUROCAM</a><div class='dir'>Logro&#241;o &middot; +2 km <span class='bad'>no compensa</span></div></td><td class='num'>1.369</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.455917,-2.407444' target='_blank'>GMOIL</a><div class='dir'>Logro&#241;o &middot; +1 km <span class='bad'>no compensa</span></div></td><td class='num'>1.379</td></tr></table></div></div><div class='zona'><div class='zona-n'>Despues de Burgos hacia Osorno (Repsol/Moeve, 3 gasolineras)</div><div class='zona-top'><div><div class='zona-sub'><b>E.S.SAIZ</b> &middot; Villanueva de Arga&#241;o</div><div class='zona-meta'>de paso</div><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.379861,-3.928167' target='_blank'>Abrir en Maps &rsaquo;</a></div><div class='precio'>1.489<span>&euro;/L</span></div></div><button class='vermas' onclick='toggleNext(this)'>Ver otras 5</button><div class='mas'><table><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.278444,-3.89175' target='_blank'>BEROIL</a><div class='dir'>Est&#233;par &middot; +10 km <span class='bad'>no compensa</span></div></td><td class='num'>1.499</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.300722,-3.835139' target='_blank'>BEROIL</a><div class='dir'>Buniel &middot; +11 km <span class='bad'>no compensa</span></div></td><td class='num'>1.499</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.287639,-3.623639' target='_blank'>CARCEDOIL</a><div class='dir'>Carcedo de Burgos &middot; +27 km <span class='bad'>no compensa</span></div></td><td class='num'>1.437</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.371861,-3.728361' target='_blank'>BEROIL</a><div class='dir'>Burgos &middot; +16 km <span class='bad'>no compensa</span></div></td><td class='num'>1.499</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.275278,-3.897222' target='_blank'>VALCARCE</a><div class='dir'>Est&#233;par &middot; +10 km <span class='bad'>no compensa</span></div></td><td class='num'>1.539</td></tr></table></div></div><div class='zona'><div class='zona-n'>Riano - Cepsa del embalse (de camino, ultimo antes de Amieva)</div><div class='zona-top'><div><div class='zona-sub'><b>FAST FUEL</b> &middot; Cistierna</div><div class='zona-meta'>+5 km de desvio &middot; ahorras ~1.6 &euro; (en 35 L)</div><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.761139,-5.137889' target='_blank'>Abrir en Maps &rsaquo;</a></div><div class='precio'>1.469<span>&euro;/L</span></div></div><button class='vermas' onclick='toggleNext(this)'>Ver otras 4</button><div class='mas'><table><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.809972,-5.130639' target='_blank'>REPSOL</a><div class='dir'>Cistierna &middot; de paso </div></td><td class='num'>1.545</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.014472,-5.276528' target='_blank'>CEDYC</a><div class='dir'>Puebla de Lillo &middot; +1 km <span class='muted'>casi igual</span></div></td><td class='num'>1.545</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.782972,-4.978667' target='_blank'>PETRONOR</a><div class='dir'>Valderrueda &middot; de paso </div></td><td class='num'>1.555</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=42.859028,-5.324444' target='_blank'>REPSOL</a><div class='dir'>Bo&#241;ar &middot; +8 km <span class='bad'>no compensa</span></div></td><td class='num'>1.545</td></tr></table></div></div><div class='zona'><div class='zona-n'>Arriondas (dias 1, 2 y 3 si hace falta)</div><div class='zona-top'><div><div class='zona-sub'><b>BALLENOIL</b> &middot; Parres</div><div class='zona-meta'>de paso</div><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.377556,-5.182694' target='_blank'>Abrir en Maps &rsaquo;</a></div><div class='precio'>1.449<span>&euro;/L</span></div></div><button class='vermas' onclick='toggleNext(this)'>Ver otras 4</button><div class='mas'><table><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.354111,-5.124972' target='_blank'>ESC-PETROLEOS</a><div class='dir'>Cangas de On&#237;s &middot; +5 km <span class='bad'>no compensa</span></div></td><td class='num'>1.499</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.350889,-5.119889' target='_blank'>REPSOL</a><div class='dir'>Cangas de On&#237;s &middot; +5 km <span class='bad'>no compensa</span></div></td><td class='num'>1.639</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.365861,-5.271472' target='_blank'>REPSOL</a><div class='dir'>Pilo&#241;a &middot; +7 km <span class='bad'>no compensa</span></div></td><td class='num'>1.639</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.464417,-5.08925' target='_blank'>ALIMERKA</a><div class='dir'>Ribadesella &middot; +10 km <span class='bad'>no compensa</span></div></td><td class='num'>1.629</td></tr></table></div></div><div class='zona'><div class='zona-n'>Cangas de Onis - ESC Petroleos (dia 4) / dia 5</div><div class='zona-top'><div><div class='zona-sub'><b>BALLENOIL</b> &middot; Parres</div><div class='zona-meta'>+5 km de desvio &middot; ahorras ~0.7 &euro; (en 35 L)</div><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.377556,-5.182694' target='_blank'>Abrir en Maps &rsaquo;</a></div><div class='precio'>1.449<span>&euro;/L</span></div></div><button class='vermas' onclick='toggleNext(this)'>Ver otras 3</button><div class='mas'><table><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.354111,-5.124972' target='_blank'>ESC-PETROLEOS</a><div class='dir'>Cangas de On&#237;s &middot; de paso </div></td><td class='num'>1.499</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.350889,-5.119889' target='_blank'>REPSOL</a><div class='dir'>Cangas de On&#237;s &middot; de paso </div></td><td class='num'>1.639</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.365861,-5.271472' target='_blank'>REPSOL</a><div class='dir'>Pilo&#241;a &middot; +11 km <span class='bad'>no compensa</span></div></td><td class='num'>1.639</td></tr></table></div></div><div class='zona'><div class='zona-n'>Gijon - Carrefour (dia 5 si hace falta)</div><div class='zona-top'><div><div class='zona-sub'><b>BALLENOIL</b> &middot; Gij&#243;n</div><div class='zona-meta'>de paso</div><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.534972,-5.690167' target='_blank'>Abrir en Maps &rsaquo;</a></div><div class='precio'>1.419<span>&euro;/L</span></div></div><button class='vermas' onclick='toggleNext(this)'>Ver otras 5</button><div class='mas'><table><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.535667,-5.689361' target='_blank'>PETROPRIX</a><div class='dir'>Gij&#243;n &middot; de paso </div></td><td class='num'>1.419</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.511556,-5.691167' target='_blank'>ALCAMPO</a><div class='dir'>Gij&#243;n &middot; +1 km <span class='muted'>casi igual</span></div></td><td class='num'>1.419</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.508861,-5.677944' target='_blank'>BALLENOIL</a><div class='dir'>Gij&#243;n &middot; +1 km <span class='muted'>casi igual</span></div></td><td class='num'>1.419</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.507444,-5.680167' target='_blank'>LA COOPERATIVA</a><div class='dir'>Gij&#243;n &middot; +1 km <span class='bad'>no compensa</span></div></td><td class='num'>1.429</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.525361,-5.711889' target='_blank'>Q8</a><div class='dir'>Gij&#243;n &middot; +2 km <span class='bad'>no compensa</span></div></td><td class='num'>1.449</td></tr></table></div></div><div class='zona'><div class='zona-n'>Potes / Liebana - E.S. Liebana (dia 3, salida de Potes)</div><div class='zona-top'><div><div class='zona-sub'><b>ESTACION DE SERVICIO LIEBANA S.L</b> &middot; Cillorigo de Li&#233;bana</div><div class='zona-meta'>de paso</div><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.167083,-4.606194' target='_blank'>Abrir en Maps &rsaquo;</a></div><div class='precio'>1.499<span>&euro;/L</span></div></div><button class='vermas' onclick='toggleNext(this)'>Ver otras 1</button><div class='mas'><table><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.254194,-4.405361' target='_blank'>PETRONOR</a><div class='dir'>Rionansa &middot; +19 km <span class='bad'>no compensa</span></div></td><td class='num'>1.579</td></tr></table></div></div><div class='zona'><div class='zona-n'>Ribadesella - Llanes (dia de vuelta)</div><div class='zona-top'><div><div class='zona-sub'><b>EL CENTRO</b> &middot; Llanes</div><div class='zona-meta'>de paso</div><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.413806,-4.881472' target='_blank'>Abrir en Maps &rsaquo;</a></div><div class='precio'>1.579<span>&euro;/L</span></div></div><button class='vermas' onclick='toggleNext(this)'>Ver otras 5</button><div class='mas'><table><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.377556,-5.182694' target='_blank'>BALLENOIL</a><div class='dir'>Parres &middot; +20 km <span class='gd'>ahorra ~1.2 &euro;</span></div></td><td class='num'>1.449</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.297944,-4.795833' target='_blank'>ESC-PETROLEOS</a><div class='dir'>Cabrales &middot; +15 km <span class='gd'>ahorra ~0.4 &euro;</span></div></td><td class='num'>1.499</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.426417,-4.86225' target='_blank'>POSADA MENENDEZ </a><div class='dir'>Llanes &middot; de paso </div></td><td class='num'>1.599</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.431667,-4.856611' target='_blank'>GALP</a><div class='dir'>Llanes &middot; de paso </div></td><td class='num'>1.599</td></tr><tr><td><a class='maplink' href='https://www.google.com/maps/search/?api=1&query=43.432722,-4.857333' target='_blank'>GALP</a><div class='dir'>Llanes &middot; de paso </div></td><td class='num'>1.599</td></tr></table></div></div>
+    </div>
+    <h2>Coste y autonomia</h2>
+    <div class="card"><div class="lead" style="background:#fff7ed;border-color:#fed7aa"><div class="t" style="color:var(--wn)">peajes y ruta</div>Peajes: por AUTOPISTA ~30 EUR ida y vuelta (peajes incluidos). Por AUTOVIA (gratis) 10-15 EUR pero 1 h mas de viaje. La gasolina del coche va aparte (ver estimacion abajo).</div></div>
+    <div class="card">
+      <table><tr><th>Tramo (ida)</th><th class="num">km</th><th class="num">litros</th><th class="num">coste</th></tr>
+        <tr><td>Zaragoza &rarr; Logrono (Alcampo Parque Rioja)</td><td class='num'>175</td><td class='num'>12.2</td><td class='num'>16.34 &euro;</td></tr><tr><td>Logrono &rarr; Burgos (parar a comer)</td><td class='num'>150</td><td class='num'>10.5</td><td class='num'>14.06 &euro;</td></tr><tr><td>Burgos &rarr; Riano (echar despues de Burgos o en Riano)</td><td class='num'>200</td><td class='num'>14.0</td><td class='num'>18.75 &euro;</td></tr><tr><td>Riano &rarr; Amieva (cerca NO hay gasolinera, la mas cercana en Prestin)</td><td class='num'>80</td><td class='num'>5.6</td><td class='num'>7.50 &euro;</td></tr>
+        <tr style="font-weight:700"><td>Total ida</td><td class="num">605</td><td class="num">42.4</td><td class="num">56.77 &euro;</td></tr>
+      </table>
+      <p class="hint" style="margin-top:12px">Con el deposito lleno aguantas ~657 km, asi que el tramo final a Amieva lo haces de sobra aunque no haya gasolineras cerca. Reposta despues de Burgos o en Riano antes de subir.</p>
+    </div>
+  </section>
+
+  <!-- DINERO -->
+  <section id="t-dinero" class="tab">
+    <h2>Gasolina (la pones tu)</h2>
+    <div class="card hero2"><div class="v">Cada uno te da <span id="gas-cuota">0</span> &euro;</div><div class="l">al final del viaje &middot; total gasolina <span id="gas-total">0</span> &euro;</div></div>
+    <div class="card">
+      <p class="hint">Apunta cada vez que repostes. Pagas tu y al final lo divides entre los 4: los otros tres te devuelven su parte.</p>
+      <div class="addrow">
+        <input class="con" id="gas-con" placeholder="Donde (ej. Logrono)">
+        <input class="imp" id="gas-imp" type="number" inputmode="decimal" step="0.01" placeholder="&euro;">
+        <button class="add" onclick="addGas()">+</button>
+      </div>
+      <div id="gas-list"></div>
+    </div>
+
+    <h2>Comida</h2>
+    <div class="card">
+      <p class="hint">Cada uno paga la suya. Esto es solo una estimacion para que sepas mas o menos cuanto llevar.</p>
+      <div class="addrow" style="align-items:center">
+        <span style="font-size:14px">Estimado total del viaje:</span>
+        <input class="imp" id="com-tot" type="number" inputmode="decimal" step="10" value="175" oninput="renderComida()"> <span style="font-size:14px">&euro;</span>
+      </div>
+      <div style="font-size:15px">Sale a <b><span id="com-pp">0</span> &euro;</b> por persona aprox.</div>
+    </div>
+
+    <details class="card fold">
+      <summary>Otros gastos compartidos (excepciones)</summary>
+      <p class="hint">Solo para cosas que pague uno por todos (una comida conjunta, un peaje...). Se reparte entre 4 y te digo quien paga a quien.</p>
+      <div class="addrow">
+        <input class="con" id="sh-con" placeholder="Concepto">
+        <input class="imp" id="sh-imp" type="number" inputmode="decimal" step="0.01" placeholder="&euro;">
+        <select id="sh-pag"></select>
+        <button class="add" onclick="addShared()">+</button>
+      </div>
+      <div id="sh-list"></div>
+      <div id="sh-liq" class="hint" style="margin-top:10px"></div>
+    </details>
+  </section>
+
+  <!-- PLAN -->
+  <section id="t-plan" class="tab">
+    <h2>Sitios (abrir en Maps)</h2>
+    <div class="card"><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.2667,-5.0667' target='_blank'>&#128205; Casa en Amieva<span>&rsaquo;</span></a><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.388,-5.183' target='_blank'>&#128205; Queseria Arriondas Lafuente<span>&rsaquo;</span></a><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.385,-5.13' target='_blank'>&#128205; Cangas Aventura (piraguismo)<span>&rsaquo;</span></a><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.3083,-5.0556' target='_blank'>&#128205; Basilica de Covadonga<span>&rsaquo;</span></a><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.1545,-4.63' target='_blank'>&#128205; Potes<span>&rsaquo;</span></a><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.1486,-4.8131' target='_blank'>&#128205; Teleferico de Fuentes De<span>&rsaquo;</span></a><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.5439,-5.6981' target='_blank'>&#128205; Gijon - Parking gratis bajo el Acuario<span>&rsaquo;</span></a><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.5466,-5.6797' target='_blank'>&#128205; Museo del Ferrocarril (Gijon)<span>&rsaquo;</span></a><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.5406,-5.6722' target='_blank'>&#128205; Playa de Poniente (Gijon)<span>&rsaquo;</span></a><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.5447,-5.6603' target='_blank'>&#128205; Termas Romanas Campo Valdes (Gijon)<span>&rsaquo;</span></a><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.536,-5.6375' target='_blank'>&#128205; Estadio El Molinon (Gijon)<span>&rsaquo;</span></a><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.4333,-5.2333' target='_blank'>&#128205; Mirador del Fitu<span>&rsaquo;</span></a><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.4167,-5.2333' target='_blank'>&#128205; Manantial de Obaya (Sierra del Sueve)<span>&rsaquo;</span></a><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.463,-5.058' target='_blank'>&#128205; Ribadesella (playa)<span>&rsaquo;</span></a><a class='sitio' href='https://www.google.com/maps/search/?api=1&query=43.4214,-4.7561' target='_blank'>&#128205; Llanes (Bar de Tito)<span>&rsaquo;</span></a></div>
+    <h2>Plan dia a dia</h2>
+    <div class='dia open'><button class='dia-h' onclick='toggleDia(this)'><div><div class='dia-f'>Sab 11 - Dia 0 (llegada)</div><div class='dia-t'>Salimos de Zaragoza hacia Asturias</div></div><span class='chev'>&rsaquo;</span></button><div class='dia-b'><p><span class='lab'>Manana</span> Salimos de Zaragoza hacia Asturias. Repostar en Alcampo Parque Rioja (Logrono) y comprar alli la cena de hoy + desayunos.</p><p><span class='lab'>Tarde</span> Parada en Burgos para comer. Echar gasolina DESPUES de Burgos (Repsol o Moeve): hay tres gasolineras entre Burgos y Osorno, repostar en la que convenga segun lo que quede. Tambien vale el Cepsa del embalse de Riano, que pilla de camino.</p><p><span class='lab'>Noche</span> Llegada a Amieva, recibir/saludar a Jorge. Vuelta por el pueblo. Cena (ya comprada en Logrono). Mirar que falta en la casa. OJO: cerca de Amieva no hay gasolineras (la mas cercana, en Prestin).</p><div class='comidas'><span>&#127869; En vuestras casas</span><span>&#127860; Restaurante en Burgos</span><span>&#127869; Perritos calientes + fruta/yogur (comprados en Logrono)</span></div></div></div><div class='dia'><button class='dia-h' onclick='toggleDia(this)'><div><div class='dia-f'>Dom 12 - Dia 1</div><div class='dia-t'>Desayunar</div></div><span class='chev'>&rsaquo;</span></button><div class='dia-b'><p><span class='lab'>Manana</span> Desayunar. A las 10:00 bajar a Arriondas a repostar (si hace falta). Mirar queseria Arriondas Lafuente y la tienda de pastas.</p><p><span class='lab'>Tarde</span> Hacer la ruta por el rio en Arriondas. Comprar en el Mercadona de Arriondas la comida y los almuerzos para los proximos dias.</p><p><span class='lab'>Noche</span> Volver a casa de Jorge. Cena en casa.</p><div class='comidas'><span>&#127869; Leche y galletas (compra Logrono)</span><span>&#127860; Macarrones con chorizo (casa)</span><span>&#127869; Ensalada variada (picatostes, tomate, atun, huevo duro)</span></div></div></div><div class='dia'><button class='dia-h' onclick='toggleDia(this)'><div><div class='dia-f'>Lun 13 - Dia 2</div><div class='dia-t'>Desayuno</div></div><span class='chev'>&rsaquo;</span></button><div class='dia-b'><p><span class='lab'>Manana</span> Desayuno. Salir a las 11:00. Bajar a Arriondas a repostar si hace falta. Piraguismo en Cangas Aventura (35 EUR/persona, dura de 2 a 4.5 h). Llevar bocadillo, crema solar, dos banadores y toallas.</p><p><span class='lab'>Tarde</span> Seguir con el piraguismo y comer el bocadillo. Luego a casa.</p><p><span class='lab'>Noche</span> Casa.</p><div class='comidas'><span>&#127869; Cereales con leche / cafe</span><span>&#127860; Bocadillo de tortilla del Mercadona</span><span>&#127869; Fritanga (croquetas, nuggets, palitos)</span></div></div></div><div class='dia'><button class='dia-h' onclick='toggleDia(this)'><div><div class='dia-f'>Mar 14 - Dia 3</div><div class='dia-t'>Desayunamos, salimos 11:00</div></div><span class='chev'>&rsaquo;</span></button><div class='dia-b'><p><span class='lab'>Manana</span> Desayunamos, salimos 11:00. Echar gasolina en Arriondas o Cangas si hace falta. Ir a Potes por la AS-114.</p><p><span class='lab'>Tarde</span> Comer en Potes (investigar restaurante). Ruta corta por el pueblo. Teleferico de Fuentes De (17 EUR/persona, 30 min) o quedarse en el cesped sin subir (gratis). Vuelta pasando por la E.S. Liebana al salir de Potes; si se hace de noche, volver por la N-621 (carretera de abajo) y repostar en Riano.</p><p><span class='lab'>Noche</span> Casa.</p><div class='comidas'><span>&#127869; Leche con magdalenas / cafe</span><span>&#127860; Restaurante en Potes</span><span>&#127869; Pizza (casa)</span></div></div></div><div class='dia'><button class='dia-h' onclick='toggleDia(this)'><div><div class='dia-f'>Mie 15 - Dia 4</div><div class='dia-t'>Desayunamos, salimos 9:00</div></div><span class='chev'>&rsaquo;</span></button><div class='dia-b'><p><span class='lab'>Manana</span> Desayunamos, salimos 9:00. Echar gasolina en Cangas (ESC Petroleos). Basilica de Santa Maria la Real de Covadonga (5 EUR/persona) y dar vueltas por la zona a ver que mas hay.</p><p><span class='lab'>Tarde</span> Volver a casa a comer. Tarde tranquila, lo que se vea por casa.</p><p><span class='lab'>Noche</span> Casa.</p><div class='comidas'><span>&#127869; Leche con cruasanes</span><span>&#127860; Arroz con tomate y huevo frito (casa)</span><span>&#127869; Pechuga de pollo con patatas fritas</span></div></div></div><div class='dia'><button class='dia-h' onclick='toggleDia(this)'><div><div class='dia-f'>Jue 16 - Dia 5 (Gijon)</div><div class='dia-t'>Desayunamos, salimos 9:00 a Gijon (llegada ~10:30)</div></div><span class='chev'>&rsaquo;</span></button><div class='dia-b'><p><span class='lab'>Manana</span> Desayunamos, salimos 9:00 a Gijon (llegada ~10:30). Aparcar en el parking gratis que esta bajo el acuario. Andando al Museo del Ferrocarril de Asturias (~30 min, gratis). Luego al Mercadona de al lado (un poco mas abajo del parking) a comprar comida.</p><p><span class='lab'>Tarde</span> Playa de Poniente jugando a las palas hasta la hora de comer (comemos lo del Mercadona). Parque Santa Catalina (~30 min). Termas Romanas de Campo Valdes (~10-15 min, gratis). Barrio de Cimadevilla (murallas, torre del reloj, plazuela del marques, capilla de Ntra. Sra. de Guadalupe). Repostar en Carrefour si hace falta.</p><p><span class='lab'>Noche</span> Pasar por El Molinon para verlo desde el coche y volver a casa (llegada ~19:00-20:00).</p><div class='comidas'><span>&#127869; Sobras de otros desayunos</span><span>&#127860; Platos preparados del Mercadona de Gijon (en la playa)</span><span>&#127869; Pescado empanado con pimientos rellenos</span></div></div></div><div class='dia'><button class='dia-h' onclick='toggleDia(this)'><div><div class='dia-f'>Vie 17 - Dia 6</div><div class='dia-t'>Desayunamos, comemos y salimos al Mirador del Fitu (aparcar en el area recrea...</div></div><span class='chev'>&rsaquo;</span></button><div class='dia-b'><p><span class='lab'>Manana</span> Desayunamos, comemos y salimos al Mirador del Fitu (aparcar en el area recreativa El Fitu, parar en gasolinera).</p><p><span class='lab'>Tarde</span> Mini ruta hasta Sierra del Sueve. Luego Manantial de Obaya y ruta de 1 h (dificultad facil).</p><p><span class='lab'>Noche</span> Casa. Dejar la casa limpia para la salida de manana.</p><div class='comidas'><span>&#127869; Sobras de otros desayunos</span><span>&#127860; Macarrones carbonara (casa)</span><span>&#127869; Tortilla de patatas del Mercadona</span></div></div></div><div class='dia'><button class='dia-h' onclick='toggleDia(this)'><div><div class='dia-f'>Sab 18 - Dia 7 (vuelta a casa)</div><div class='dia-t'>Desayunamos, salimos a las 10:00</div></div><span class='chev'>&rsaquo;</span></button><div class='dia-b'><p><span class='lab'>Manana</span> Desayunamos, salimos a las 10:00. Llegamos a Ribadesella y vemos las playas.</p><p><span class='lab'>Tarde</span> Vamos a Llanes y comemos en el Bar de Tito.</p><p><span class='lab'>Noche</span> Vuelta a Zaragoza pasando por Torrelavega y bajando hacia Reinosa; se pasa por Burgos y luego Zaragoza.</p><div class='comidas'><span>&#127869; Sobras de otros desayunos</span><span>&#127860; Bar de Tito (Llanes)</span><span>&#127869; En vuestras casas</span></div></div></div>
+  </section>
+
+  <!-- LISTAS (maleta + compra) -->
+  <section id="t-listas" class="tab">
+    <div class="chips" id="l-tabs">
+      <button class="on" onclick="showLista('maleta',this)">Maleta</button>
+      <button onclick="showLista('compra',this)">Compra</button>
+    </div>
+
+    <div id="l-maleta">
+      <div class="card">
+        <p class="hint">Anade cosas y di quien las lleva. Marca el cuadrito cuando ya este metido.</p>
+        <div class="addrow">
+          <input class="con" id="m-item" placeholder="Que llevar (ej. Sombrilla)">
+          <select id="m-quien"></select>
+          <button class="add" onclick="addItem()">+</button>
+        </div>
+        <div class="chips" id="m-filtros"></div>
+        <div class="mut" style="font-size:13px"><span id="m-n">0</span> de <span id="m-tot">0</span> preparado</div>
+        <div class="prog"><div id="m-bar"></div></div>
+        <div id="m-list"></div>
+      </div>
+    </div>
+
+    <div id="l-compra" style="display:none">
+      <div class="card">
+        <p class="hint">La compra del viaje (Logrono y Mercadona Arriondas). Marca lo que vayas metiendo en el carro. Puedes anadir mas.</p>
+        <div class="addrow">
+          <input class="con" id="c-item" placeholder="Anadir producto">
+          <select id="c-grupo"></select>
+          <button class="add" onclick="addCompra()">+</button>
+        </div>
+        <div class="mut" style="font-size:13px"><span id="c-n">0</span> de <span id="c-tot">0</span> comprado</div>
+        <div class="prog"><div id="c-bar"></div></div>
+        <div id="c-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>Para refrescar precios, abre de nuevo "Abrir panel.bat". Lo que apuntes se guarda en este movil/navegador.</footer>
+</div>
+
+<nav class="tabs">
+  <button class="active" onclick="showTab('t-inicio',this)"><span class="ic">&#127968;</span>Inicio</button>
+  <button onclick="showTab('t-gas',this)"><span class="ic">&#9981;</span>Gasolina</button>
+  <button onclick="showTab('t-dinero',this)"><span class="ic">&#128176;</span>Dinero</button>
+  <button onclick="showTab('t-plan',this)"><span class="ic">&#128506;</span>Plan</button>
+  <button onclick="showTab('t-listas',this)"><span class="ic">&#128203;</span>Listas</button>
+</nav>
+<script>
+const VIAJEROS = ["Yo","Daniel","David","Diego"];
+const SEED_CHECK = ["Zapatillas tipo escarpin (para las canoas)","Prenda de primavera (mananas frescas)","Banador","Crema solar","2 toallas (1 para ducharse + 1 para las canoas)","Solo 2 mochilas en total","Dinero en efectivo","Cargador movil","Cargador coche","Documentacion del coche y seguro","Botiquin basico","Calzado comodo para rutas","Bolsas de basura","Bocadillos para el piraguismo"];
+const SEED_RESERVAS = ["Reservar piraguismo en Cangas Aventura (35 EUR/persona, dura 2 a 4.5 h)","Confirmar horario y precio del teleferico de Fuentes De (17 EUR/persona, 30 min)","Mirar horario de la Basilica de Covadonga (5 EUR/persona)","Investigar restaurante para comer en Potes (dia 3)","Preguntar a Jorge que hay en la casa (sabanas, menaje, etc.)","Repostar lleno antes de subir a Amieva (la mas cercana esta lejos, en Prestin)"];
+const SEED_COMPRA = [{"item":"Leche entera","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Leche semidesnatada","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Cafe Nescafe","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Colacao","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Galletas con chocolate x2","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Salchichas","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Pan de perrito caliente","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Mayonesa","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Merienda (que no se derrita en el coche)","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Fruta / yogures","grupo":"Alcampo Logrono (cena dia 0 + desayunos)"},{"item":"Aceite","grupo":"Mercadona Arriondas (varios dias)"},{"item":"18 L de leche entera/semi","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Cereales","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Galletas","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Magdalenas","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Cruasanes","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Macarrones 2 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Tomate frito 3 L","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Cebollas 1 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Chorizo 1 manojo","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Queso rallado 3 bolsas","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Mix de frutos secos","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Ensalada mix 4 bolsas","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Picatostes x3","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Huevos x24","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Tomate 3 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Atun pack de 6","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Tortillas Mercadona x3","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Pan 4 barras","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Fuet x6","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Mayonesa x2","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Croquetas x3","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Nuggets x3","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Palitos fritos x3","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Patatas chips","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Patatas para freir 2 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Pizzas x6","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Arroz 2 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Pollo 1 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Pescado empanado 1 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Pimientos rellenos 1 kg","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Nata 1 L","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Bacon 400 g","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Sal","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Queso parmesano 400 g","grupo":"Mercadona Arriondas (varios dias)"},{"item":"Chicles","grupo":"Mercadona Arriondas (varios dias)"}];
+const PAGADOR = "Yo";
+const eur = n => (Math.round(n*100)/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
+const K_GAS='viajeAmieva_gas2', K_SH='viajeAmieva_shared', K_MAL='viajeAmieva_maleta2';
+const K_RES='viajeAmieva_reservas', K_NOT='viajeAmieva_notas', K_COM='viajeAmieva_compra';
+const load=(k,def)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return v??def; }catch(e){ return def; } };
+
+function showTab(id, btn){
+  document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('active', s.id===id));
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); window.scrollTo(0,0);
+}
+function toggleDia(b){ b.parentElement.classList.toggle('open'); }
+function toggleNext(b){ b.parentElement.classList.toggle('show'); }
+function showLista(id, btn){
+  document.getElementById('l-maleta').style.display = id==='maleta'?'':'none';
+  document.getElementById('l-compra').style.display = id==='compra'?'':'none';
+  document.querySelectorAll('#l-tabs button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+/* ---- Gasolina (la pone PAGADOR, se divide entre todos) ---- */
+let repos = load(K_GAS, []);
+function saveGas(){ localStorage.setItem(K_GAS, JSON.stringify(repos)); }
+function addGas(){
+  const con=document.getElementById('gas-con').value.trim()||'Repostaje';
+  const imp=parseFloat(document.getElementById('gas-imp').value);
+  if(isNaN(imp)){ alert('Pon los euros del repostaje.'); return; }
+  repos.push({nota:con, importe:imp}); saveGas();
+  document.getElementById('gas-con').value=''; document.getElementById('gas-imp').value='';
+  renderGas();
+}
+function delGas(i){ repos.splice(i,1); saveGas(); renderGas(); }
+function renderGas(){
+  const list=document.getElementById('gas-list'); list.innerHTML=''; let total=0;
+  repos.forEach((r,i)=>{ total+=Number(r.importe)||0;
+    const row=document.createElement('div'); row.className='line';
+    row.innerHTML='<span class="gc">'+r.nota+'</span><span class="gv">'+eur(r.importe)+' &euro;</span>'+
+      '<button class="gx" onclick="delGas('+i+')">&times;</button>';
+    list.appendChild(row);
+  });
+  document.getElementById('gas-total').textContent=eur(total);
+  document.getElementById('gas-cuota').textContent=eur(total/VIAJEROS.length);
+}
+
+/* ---- Comida (cada uno la suya, solo estimacion) ---- */
+function renderComida(){
+  const t=parseFloat(document.getElementById('com-tot').value)||0;
+  document.getElementById('com-pp').textContent=eur(t/VIAJEROS.length);
+}
+
+/* ---- Gastos compartidos (excepciones) ---- */
+let shared = load(K_SH, []);
+function saveSh(){ localStorage.setItem(K_SH, JSON.stringify(shared)); }
+document.getElementById('sh-pag').innerHTML='<option value="">quien pago</option>'+VIAJEROS.map(v=>'<option>'+v+'</option>').join('');
+function addShared(){
+  const con=document.getElementById('sh-con').value.trim();
+  const imp=parseFloat(document.getElementById('sh-imp').value);
+  const pag=document.getElementById('sh-pag').value;
+  if(!con||isNaN(imp)){ alert('Pon concepto e importe.'); return; }
+  shared.push({concepto:con, importe:imp, pagadoPor:pag}); saveSh();
+  document.getElementById('sh-con').value=''; document.getElementById('sh-imp').value=''; document.getElementById('sh-pag').value='';
+  renderSh();
+}
+function delSh(i){ shared.splice(i,1); saveSh(); renderSh(); }
+function setShPag(i,v){ shared[i].pagadoPor=v; saveSh(); renderSh(); }
+function renderSh(){
+  const list=document.getElementById('sh-list'); list.innerHTML='';
+  const pagado={}; VIAJEROS.forEach(v=>pagado[v]=0); let total=0;
+  shared.forEach((g,i)=>{ total+=Number(g.importe)||0; if(g.pagadoPor&&pagado.hasOwnProperty(g.pagadoPor)) pagado[g.pagadoPor]+=Number(g.importe)||0;
+    const opts='<option value="">nadie</option>'+VIAJEROS.map(v=>'<option '+(v===g.pagadoPor?'selected':'')+'>'+v+'</option>').join('');
+    const row=document.createElement('div'); row.className='line';
+    row.innerHTML='<span class="gc">'+g.concepto+'</span><span class="gv">'+eur(g.importe)+' &euro;</span>'+
+      '<select class="own" onchange="setShPag('+i+',this.value)">'+opts+'</select>'+
+      '<button class="gx" onclick="delSh('+i+')">&times;</button>';
+    list.appendChild(row);
+  });
+  const cuota=total/VIAJEROS.length, saldos={};
+  VIAJEROS.forEach(v=>saldos[v]=pagado[v]-cuota);
+  document.getElementById('sh-liq').innerHTML = total>0 ? liquidar(saldos) : '';
+}
+function liquidar(saldos){
+  const deb=[],acr=[];
+  Object.keys(saldos).forEach(v=>{ const s=Math.round(saldos[v]*100)/100; if(s<-0.01)deb.push([v,-s]); else if(s>0.01)acr.push([v,s]); });
+  if(!deb.length) return 'Compartidos: todo cuadrado.';
+  deb.sort((a,b)=>b[1]-a[1]); acr.sort((a,b)=>b[1]-a[1]);
+  const pasos=[]; let i=0,j=0;
+  while(i<deb.length&&j<acr.length){ const m=Math.min(deb[i][1],acr[j][1]);
+    pasos.push('<b>'+deb[i][0]+'</b> da <b>'+eur(m)+' &euro;</b> a <b>'+acr[j][0]+'</b>');
+    deb[i][1]-=m; acr[j][1]-=m; if(deb[i][1]<0.01)i++; if(acr[j][1]<0.01)j++; }
+  return 'Para cuadrar:<br>'+pasos.join('<br>');
+}
+
+/* ---- Maleta editable ---- */
+const OWNERS = VIAJEROS.concat(['Comun']);
+let maleta = load(K_MAL, null);
+if(!Array.isArray(maleta)){ maleta = SEED_CHECK.map(x=>({item:x, quien:'Comun', ok:false})); localStorage.setItem(K_MAL, JSON.stringify(maleta)); }
+let filtro='Todos';
+function saveMal(){ localStorage.setItem(K_MAL, JSON.stringify(maleta)); }
+document.getElementById('m-quien').innerHTML=OWNERS.map(v=>'<option'+(v==='Comun'?' selected':'')+'>'+v+'</option>').join('');
+function addItem(){
+  const it=document.getElementById('m-item').value.trim();
+  const q=document.getElementById('m-quien').value;
+  if(!it){ alert('Escribe que llevar.'); return; }
+  maleta.push({item:it, quien:q, ok:false}); saveMal();
+  document.getElementById('m-item').value='';
+  renderMaleta();
+}
+function delItem(i){ maleta.splice(i,1); saveMal(); renderMaleta(); }
+function toggleItem(i){ maleta[i].ok=!maleta[i].ok; saveMal(); renderMaleta(); }
+function setFiltro(f){ filtro=f; renderMaleta(); }
+function renderMaleta(){
+  const fil=document.getElementById('m-filtros'); fil.innerHTML='';
+  ['Todos'].concat(OWNERS).forEach(f=>{
+    const b=document.createElement('button'); b.textContent=f; if(f===filtro)b.className='on';
+    b.onclick=()=>setFiltro(f); fil.appendChild(b);
+  });
+  const list=document.getElementById('m-list'); list.innerHTML='';
+  let shown=0, done=0;
+  maleta.forEach((m,i)=>{
+    if(filtro!=='Todos' && m.quien!==filtro) return;
+    shown++; if(m.ok)done++;
+    const tagcls = m.quien==='Comun' ? 'tag comun':'tag';
+    const row=document.createElement('div'); row.className='chk-item';
+    row.innerHTML='<input type="checkbox" '+(m.ok?'checked':'')+' onchange="toggleItem('+i+')">'+
+      '<span class="txt '+(m.ok?'done':'')+'">'+m.item+'</span>'+
+      '<span class="'+tagcls+'">'+m.quien+'</span>'+
+      '<button class="gx" onclick="delItem('+i+')">&times;</button>';
+    list.appendChild(row);
+  });
+  document.getElementById('m-tot').textContent=shown;
+  document.getElementById('m-n').textContent=done;
+  document.getElementById('m-bar').style.width=(shown?Math.round(done/shown*100):0)+'%';
+}
+
+/* ---- Compra (lista del viaje, agrupada y marcable) ---- */
+let compra = load(K_COM, null);
+if(!Array.isArray(compra)){ compra = SEED_COMPRA.map(x=>({item:x.item, grupo:x.grupo, ok:false})); localStorage.setItem(K_COM, JSON.stringify(compra)); }
+function saveCom(){ localStorage.setItem(K_COM, JSON.stringify(compra)); }
+const GRUPOS = SEED_COMPRA.reduce((a,x)=>{ if(!a.includes(x.grupo))a.push(x.grupo); return a; }, []);
+document.getElementById('c-grupo').innerHTML=GRUPOS.map(g=>'<option>'+g+'</option>').join('');
+function addCompra(){
+  const it=document.getElementById('c-item').value.trim();
+  const g=document.getElementById('c-grupo').value || (GRUPOS[0]||'Compra');
+  if(!it){ alert('Escribe el producto.'); return; }
+  compra.push({item:it, grupo:g, ok:false}); saveCom();
+  document.getElementById('c-item').value=''; renderCompra();
+}
+function delCompra(i){ compra.splice(i,1); saveCom(); renderCompra(); }
+function toggleCompra(i){ compra[i].ok=!compra[i].ok; saveCom(); renderCompra(); }
+function renderCompra(){
+  const list=document.getElementById('c-list'); list.innerHTML='';
+  let done=0;
+  const grupos=[]; compra.forEach(c=>{ if(!grupos.includes(c.grupo))grupos.push(c.grupo); });
+  grupos.forEach(g=>{
+    const h=document.createElement('div'); h.className='grupo'; h.textContent=g; list.appendChild(h);
+    compra.forEach((c,i)=>{
+      if(c.grupo!==g) return; if(c.ok)done++;
+      const row=document.createElement('div'); row.className='chk-item';
+      row.innerHTML='<input type="checkbox" '+(c.ok?'checked':'')+' onchange="toggleCompra('+i+')">'+
+        '<span class="txt '+(c.ok?'done':'')+'">'+c.item+'</span>'+
+        '<button class="gx" onclick="delCompra('+i+')">&times;</button>';
+      list.appendChild(row);
+    });
+  });
+  document.getElementById('c-tot').textContent=compra.length;
+  document.getElementById('c-n').textContent=done;
+  document.getElementById('c-bar').style.width=(compra.length?Math.round(done/compra.length*100):0)+'%';
+}
+
+/* ---- Antes de salir (reservas) ---- */
+let reservas = load(K_RES, null);
+if(!Array.isArray(reservas)){ reservas = SEED_RESERVAS.map(x=>({item:x, ok:false})); localStorage.setItem(K_RES, JSON.stringify(reservas)); }
+function saveRes(){ localStorage.setItem(K_RES, JSON.stringify(reservas)); }
+function toggleRes(i){ reservas[i].ok=!reservas[i].ok; saveRes(); renderRes(); }
+function renderRes(){
+  const list=document.getElementById('res-list'); list.innerHTML='';
+  reservas.forEach((r,i)=>{
+    const row=document.createElement('div'); row.className='chk-item';
+    row.innerHTML='<input type="checkbox" '+(r.ok?'checked':'')+' onchange="toggleRes('+i+')">'+
+      '<span class="txt '+(r.ok?'done':'')+'">'+r.item+'</span>';
+    list.appendChild(row);
+  });
+}
+
+/* ---- Notas ---- */
+const ta=document.getElementById('notas');
+ta.value = load(K_NOT, '') || '';
+ta.addEventListener('input', ()=>localStorage.setItem(K_NOT, JSON.stringify(ta.value)));
+
+renderGas(); renderComida(); renderSh(); renderMaleta(); renderCompra(); renderRes();
+</script>
+</body>
+</html>
+
