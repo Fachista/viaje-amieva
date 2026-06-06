@@ -27,8 +27,27 @@ jobs:
       - name: Descargar el repositorio
         uses: actions/checkout@v4
 
+      # El servidor del Ministerio usa TLS antiguo que el OpenSSL nuevo de Ubuntu
+      # rechaza por defecto. Esta config permite la renegociacion/cifrados heredados
+      # solo para descargar los precios.
+      - name: Permitir TLS heredado (API Ministerio)
+        run: |
+          cat > "$HOME/openssl-legacy.cnf" <<'EOF'
+          openssl_conf = openssl_init
+          [openssl_init]
+          ssl_conf = ssl_sect
+          [ssl_sect]
+          system_default = system_default_sect
+          [system_default_sect]
+          Options = UnsafeLegacyRenegotiation
+          CipherString = DEFAULT@SECLEVEL=0
+          MinProtocol = TLSv1
+          EOF
+
       - name: Generar index.html (precios + tiempo)
         shell: pwsh
+        env:
+          OPENSSL_CONF: /home/runner/openssl-legacy.cnf
         run: ./ViajeAmieva.ps1 -NoOpen
 
       - name: Publicar si hay cambios
