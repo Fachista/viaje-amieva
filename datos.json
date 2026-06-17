@@ -26,14 +26,14 @@
   },
   "rutaNota": "Peajes: por AUTOPISTA ~30 EUR ida y vuelta (peajes incluidos). Por AUTOVIA (gratis) 10-15 EUR pero 1 h mas de viaje. La gasolina del coche va aparte (ver estimacion abajo).",
   "paradas": [
-    { "nombre": "Logrono - Alcampo Parque Rioja (echar + comprar cena dia 0)", "prov": "26", "lat": 42.4627, "lon": -2.4449, "radioKm": 9 },
-    { "nombre": "Despues de Burgos hacia Osorno (Repsol/Moeve, 3 gasolineras)", "prov": "09", "lat": 42.3850, "lon": -3.9700, "radioKm": 33 },
-    { "nombre": "Riano - Cepsa del embalse (de camino, ultimo antes de Amieva)", "prov": "24", "lat": 42.9836, "lon": -5.0010, "radioKm": 30 },
-    { "nombre": "Arriondas (dias 1, 2 y 3 si hace falta)", "prov": "33", "lat": 43.3870, "lon": -5.1800, "radioKm": 12 },
-    { "nombre": "Cangas de Onis - ESC Petroleos (dia 4) / dia 5", "prov": "33", "lat": 43.3508, "lon": -5.1300, "radioKm": 12 },
-    { "nombre": "Gijon - Carrefour (dia 5 si hace falta)", "prov": "33", "lat": 43.5357, "lon": -5.6615, "radioKm": 12 },
-    { "nombre": "Potes / Liebana - E.S. Liebana (dia 3, salida de Potes)", "prov": "39", "lat": 43.1545, "lon": -4.6300, "radioKm": 25 },
-    { "nombre": "Ribadesella - Llanes (dia de vuelta)", "prov": "33", "lat": 43.4500, "lon": -4.9000, "radioKm": 28 }
+    { "nombre": "Logrono - Alcampo Parque Rioja (echar + comprar cena dia 0)", "prov": "26", "lat": 42.4627, "lon": -2.4449, "radioKm": 9, "dia": 0 },
+    { "nombre": "Despues de Burgos hacia Osorno (Repsol/Moeve, 3 gasolineras)", "prov": "09", "lat": 42.3850, "lon": -3.9700, "radioKm": 33, "dia": 0 },
+    { "nombre": "Riano - Cepsa del embalse (de camino, ultimo antes de Amieva)", "prov": "24", "lat": 42.9836, "lon": -5.0010, "radioKm": 30, "dia": 0 },
+    { "nombre": "Arriondas (dias 1, 2 y 3 si hace falta)", "prov": "33", "lat": 43.3870, "lon": -5.1800, "radioKm": 12, "dia": 1 },
+    { "nombre": "Cangas de Onis - ESC Petroleos (dia 4) / dia 5", "prov": "33", "lat": 43.3508, "lon": -5.1300, "radioKm": 12, "dia": 4 },
+    { "nombre": "Gijon - Carrefour (dia 5 si hace falta)", "prov": "33", "lat": 43.5357, "lon": -5.6615, "radioKm": 12, "dia": 5 },
+    { "nombre": "Potes / Liebana - E.S. Liebana (dia 3, salida de Potes)", "prov": "39", "lat": 43.1545, "lon": -4.6300, "radioKm": 25, "dia": 3 },
+    { "nombre": "Ribadesella - Llanes (dia de vuelta)", "prov": "33", "lat": 43.4500, "lon": -4.9000, "radioKm": 28, "dia": 7 }
   ],
   "tramosIda": [
     { "de": "Zaragoza", "a": "Logrono (Alcampo Parque Rioja)", "km": 175 },
@@ -50,21 +50,21 @@
     "Repostar lleno antes de subir a Amieva (la mas cercana esta lejos, en Prestin)"
   ],
   "sitios": [
-    { "nombre": "Casa en Amieva", "lat": 43.2667, "lon": -5.0667 },
-    { "nombre": "Queseria Arriondas Lafuente", "lat": 43.3880, "lon": -5.1830 },
-    { "nombre": "Cangas Aventura - punto de encuentro canoas (Pol. Santa Rita A4)", "lat": 43.377453, "lon": -5.182946 },
-    { "nombre": "Basilica de Covadonga", "lat": 43.3083, "lon": -5.0556 },
-    { "nombre": "Potes", "lat": 43.1545, "lon": -4.6300 },
-    { "nombre": "Teleferico de Fuentes De", "lat": 43.1486, "lon": -4.8131 },
-    { "nombre": "Gijon - Parking gratis bajo el Acuario", "lat": 43.5439, "lon": -5.6981 },
-    { "nombre": "Museo del Ferrocarril (Gijon)", "lat": 43.5466, "lon": -5.6797 },
-    { "nombre": "Playa de Poniente (Gijon)", "lat": 43.5406, "lon": -5.6722 },
-    { "nombre": "Termas Romanas Campo Valdes (Gijon)", "lat": 43.5447, "lon": -5.6603 },
-    { "nombre": "Estadio El Molinon (Gijon)", "lat": 43.5360, "lon": -5.6375 },
-    { "nombre": "Mirador del Fitu", "lat": 43.4333, "lon": -5.2333 },
-    { "nombre": "Manantial de Obaya (Sierra del Sueve)", "lat": 43.4167, "lon": -5.2333 },
-    { "nombre": "Ribadesella (playa)", "lat": 43.4630, "lon": -5.0580 },
-    { "nombre": "Llanes (Bar de Tito)", "lat": 43.4214, "lon": -4.7561 }
+    { "nombre": "Casa en Amieva", "lat": 43.2667, "lon": -5.0667, "dia": 0 },
+    { "nombre": "Queseria Arriondas Lafuente", "lat": 43.3880, "lon": -5.1830, "dia": 1 },
+    { "nombre": "Cangas Aventura - punto de encuentro canoas (Pol. Santa Rita A4)", "lat": 43.377453, "lon": -5.182946, "dia": 2 },
+    { "nombre": "Basilica de Covadonga", "lat": 43.3083, "lon": -5.0556, "dia": 4 },
+    { "nombre": "Potes", "lat": 43.1545, "lon": -4.6300, "dia": 3 },
+    { "nombre": "Teleferico de Fuentes De", "lat": 43.1486, "lon": -4.8131, "dia": 3 },
+    { "nombre": "Gijon - Parking gratis bajo el Acuario", "lat": 43.5439, "lon": -5.6981, "dia": 5 },
+    { "nombre": "Museo del Ferrocarril (Gijon)", "lat": 43.5466, "lon": -5.6797, "dia": 5 },
+    { "nombre": "Playa de Poniente (Gijon)", "lat": 43.5406, "lon": -5.6722, "dia": 5 },
+    { "nombre": "Termas Romanas Campo Valdes (Gijon)", "lat": 43.5447, "lon": -5.6603, "dia": 5 },
+    { "nombre": "Estadio El Molinon (Gijon)", "lat": 43.5360, "lon": -5.6375, "dia": 5 },
+    { "nombre": "Mirador del Fitu", "lat": 43.4333, "lon": -5.2333, "dia": 6 },
+    { "nombre": "Manantial de Obaya (Sierra del Sueve)", "lat": 43.4167, "lon": -5.2333, "dia": 6 },
+    { "nombre": "Ribadesella (playa)", "lat": 43.4630, "lon": -5.0580, "dia": 7 },
+    { "nombre": "Llanes (Bar de Tito)", "lat": 43.4214, "lon": -4.7561, "dia": 7 }
   ],
   "compra": {
     "Alcampo Logrono (cena dia 0 + desayunos)": [

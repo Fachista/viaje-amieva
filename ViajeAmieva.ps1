@@ -192,7 +192,8 @@ function Get-RouteStations {
       }
     }
     $stations = @($stations | Sort-Object Precio, Dist)
-    $result += [pscustomobject]@{ Nombre = $p.nombre; Estaciones = $stations }
+    $pdia = if ($p.PSObject.Properties['dia']) { [int]$p.dia } else { -1 }
+    $result += [pscustomobject]@{ Nombre = $p.nombre; Dia = $pdia; Estaciones = $stations }
   }
   return [pscustomobject]@{ Fecha = $fecha; Paradas = $result }
 }
@@ -200,8 +201,9 @@ function Get-RouteStations {
 # Economia del desvio: devuelve la parada con estacion recomendada y lista evaluada
 function Resolve-Economics {
   param($Parada, [double]$Consumo, [double]$Litros)
+  $pdia = if ($Parada.PSObject.Properties['Dia']) { [int]$Parada.Dia } else { -1 }
   $est = @($Parada.Estaciones)
-  if ($est.Count -eq 0) { return [pscustomobject]@{ Nombre=$Parada.Nombre; Reco=$null; Lista=@(); RefPrecio=$null } }
+  if ($est.Count -eq 0) { return [pscustomobject]@{ Nombre=$Parada.Nombre; Dia=$pdia; Reco=$null; Lista=@(); RefPrecio=$null } }
 
   # baseline = la mas barata "de paso" (<=3 km); si no, la mas cercana
   $cerca = @($est | Where-Object { $_.Dist -le 3 } | Sort-Object Precio)
@@ -226,7 +228,7 @@ function Resolve-Economics {
   if ($cand.Count -eq 0) { $cand = $eval }
   $reco = $cand | Sort-Object Neto -Descending | Select-Object -First 1
   $lista = @($eval | Sort-Object Neto -Descending)
-  return [pscustomobject]@{ Nombre=$Parada.Nombre; Reco=$reco; Lista=$lista; RefPrecio=$refPrecio }
+  return [pscustomobject]@{ Nombre=$Parada.Nombre; Dia=$pdia; Reco=$reco; Lista=$lista; RefPrecio=$refPrecio }
 }
 
 # ---------------------------------------------------------------------------
@@ -263,23 +265,35 @@ function Build-Html {
   # tiempo: mapea cada dia del viaje a su prevision (si esta disponible)
   $weatherHtml = New-Object Text.StringBuilder
   $hayTiempo = $false
+  $dayWx = @{}     # idx -> @{ Icon; Texto; TMax; TMin; Rain }
+  $dayFecha = @{}  # idx -> "Sab 11"
   try {
     $inicioW = [datetime]::ParseExact([string]$Data.fechaInicio,'yyyy-MM-dd',$INV)
     $dias3 = @('Dom','Lun','Mar','Mie','Jue','Vie','Sab')
-    $diaNum = @('','dom','lun','mar','mie','jue','vie','sab')
     for ($i = 0; $i -lt $Data.dias.Count; $i++) {
       $fd = $inicioW.AddDays($i)
       $key = $fd.ToString('yyyy-MM-dd')
       $etq = $dias3[[int]$fd.DayOfWeek] + ' ' + $fd.Day
+      $dayFecha[$i] = $etq
       if ($Weather.ContainsKey($key)) {
         $hayTiempo = $true
         $wi = $Weather[$key]
         $ico = (Get-WeatherIcon $wi.Code)
+        $dayWx[$i] = [pscustomobject]@{ Icon=$ico[0]; Texto=$ico[1]; TMax=$wi.TMax; TMin=$wi.TMin; Rain=$wi.Rain }
         [void]$weatherHtml.Append("<div class='wday'><div class='wd-f'>$etq</div><div class='wd-i'>$($ico[0])</div><div class='wd-t'>$($wi.TMax)&deg; / $($wi.TMin)&deg;</div><div class='wd-r'>&#127783;&#65039; $($wi.Rain)%</div></div>")
       } else {
         [void]$weatherHtml.Append("<div class='wday off'><div class='wd-f'>$etq</div><div class='wd-i'>&middot;&middot;&middot;</div><div class='wd-t muted' style='font-size:11px'>lejos</div></div>")
       }
     }
+  } catch { }
+
+  # que dia del viaje es "hoy" (-1 antes, 0..n durante, 99 despues)
+  $todayIdx = -1
+  try {
+    $st = [datetime]::ParseExact([string]$Data.fechaInicio,'yyyy-MM-dd',$INV).Date
+    $df = [int][math]::Floor(((Get-Date).Date - $st).TotalDays)
+    if ($df -ge 0 -and $df -lt $Data.dias.Count) { $todayIdx = $df }
+    elseif ($df -ge $Data.dias.Count) { $todayIdx = 99 }
   } catch { }
 
   # sitios con enlaces a Maps
@@ -342,22 +356,81 @@ function Build-Html {
     "<b>$(HtmlEnc $mejorGlobal.Rotulo)</b> en $(HtmlEnc $mejorGlobal.Municipio) &middot; <b>$(([double]$mejorGlobal.Precio).ToString('0.000',$INV)) &euro;/L</b>"
   } else { "Sin precios ahora mismo (revisa la conexion)." }
 
-  # dias (acordeon)
-  $diasHtml = New-Object Text.StringBuilder
-  $iDia = 0
-  foreach ($dd in $Data.dias) {
-    $iDia++
+  # ---- Itinerario unificado: cada dia reune plan + gasolinera + tiempo + comidas + sitios ----
+  $itinHtml = New-Object Text.StringBuilder
+  [void]$itinHtml.Append("<div class='trip'>")
+  for ($i = 0; $i -lt $Data.dias.Count; $i++) {
+    $dd = $Data.dias[$i]
+    $iDia = $i + 1
+    $parts = [string]$dd.fecha -split ' - ', 2
+    $dpart = $parts[0].Trim()
+    $tpart = if ($parts.Count -ge 2) { $parts[1].Trim() } else { '' }
     $teaser = ([string]$dd.manana -split '\. ')[0]
-    if ($teaser.Length -gt 80) { $teaser = $teaser.Substring(0,77) + '...' }
-    $open = if ($iDia -eq 1) { ' open' } else { '' }
-    [void]$diasHtml.Append("<div class='dia$open'>")
-    [void]$diasHtml.Append("<button class='dia-h' onclick='toggleDia(this)'><div><div class='dia-f'>$(HtmlEnc $dd.fecha)</div><div class='dia-t'>$(HtmlEnc $teaser)</div></div><span class='chev'>&rsaquo;</span></button>")
-    [void]$diasHtml.Append("<div class='dia-b'>")
-    [void]$diasHtml.Append("<p><span class='lab'>Manana</span> <span class='ed' data-k='d$iDia-m'>$(HtmlEnc $dd.manana)</span></p>")
-    [void]$diasHtml.Append("<p><span class='lab'>Tarde</span> <span class='ed' data-k='d$iDia-t'>$(HtmlEnc $dd.tarde)</span></p>")
-    [void]$diasHtml.Append("<p><span class='lab'>Noche</span> <span class='ed' data-k='d$iDia-n'>$(HtmlEnc $dd.noche)</span></p>")
-    [void]$diasHtml.Append("<div class='comidas'><span>&#127869; <span class='ed' data-k='d$iDia-de'>$(HtmlEnc $dd.desayuno)</span></span><span>&#127860; <span class='ed' data-k='d$iDia-co'>$(HtmlEnc $dd.comida)</span></span><span>&#127869; <span class='ed' data-k='d$iDia-ce'>$(HtmlEnc $dd.cena)</span></span></div>")
-    [void]$diasHtml.Append("</div></div>")
+    if ($teaser.Length -gt 78) { $teaser = $teaser.Substring(0,75) + '...' }
+    $isHoy = ($i -eq $todayIdx)
+    $open = if ($isHoy -or ($todayIdx -lt 0 -and $i -eq 0) -or ($todayIdx -eq 99 -and $i -eq ($Data.dias.Count - 1))) { ' open' } else { '' }
+    $dotCls = if ($isHoy) { 'jdot hoy' } else { 'jdot' }
+    $wx = if ($dayWx.ContainsKey($i)) { $dayWx[$i] } else { $null }
+    $wxMini = if ($wx) { "<span class='jwx'>$($wx.Icon) $($wx.TMax)&deg;</span>" } else { '' }
+    $hoyTag = if ($isHoy) { " <span class='hoytag'>HOY</span>" } else { '' }
+
+    [void]$itinHtml.Append("<div class='jday'><div class='jnode'><span class='$dotCls'>$i</span></div>")
+    [void]$itinHtml.Append("<div class='jcard$open' id='jday$i'>")
+    [void]$itinHtml.Append("<button class='jhead' onclick='toggleDia(this)'><div class='jmeta'><div class='jdate'>$(HtmlEnc $dpart)$hoyTag</div><div class='jtitle'>$(HtmlEnc $tpart)</div><div class='jteaser'>$(HtmlEnc $teaser)</div></div><div class='jright'>$wxMini<span class='chev'>&rsaquo;</span></div></button>")
+    [void]$itinHtml.Append("<div class='jbody'>")
+    [void]$itinHtml.Append("<div class='seg'><span class='seg-t'>Manana</span><span class='ed' data-k='d$iDia-m'>$(HtmlEnc $dd.manana)</span></div>")
+    [void]$itinHtml.Append("<div class='seg'><span class='seg-t'>Tarde</span><span class='ed' data-k='d$iDia-t'>$(HtmlEnc $dd.tarde)</span></div>")
+    [void]$itinHtml.Append("<div class='seg'><span class='seg-t'>Noche</span><span class='ed' data-k='d$iDia-n'>$(HtmlEnc $dd.noche)</span></div>")
+    $dayGas = @($ecos | Where-Object { $_.Dia -eq $i -and $_.Reco })
+    foreach ($g in $dayGas) {
+      $r = $g.Reco
+      $mp = "https://www.google.com/maps/search/?api=1&query=$(([double]$r.Lat).ToString('0.######',$INV)),$(([double]$r.Lon).ToString('0.######',$INV))"
+      $dv = if ($r.ExtraKm -le 0.6) { 'de paso' } else { "+$($r.ExtraKm.ToString('0.#',$INV)) km" }
+      [void]$itinHtml.Append("<a class='dline gas' href='$mp' target='_blank'><span class='dline-ic'>&#9981;</span><span class='dline-tx'><b>$(HtmlEnc $r.Rotulo)</b><small>$(HtmlEnc $r.Municipio) &middot; $dv</small></span><span class='dline-v'>$(([double]$r.Precio).ToString('0.000',$INV))<small>&euro;/L</small></span></a>")
+    }
+    if ($wx) {
+      [void]$itinHtml.Append("<div class='dline'><span class='dline-ic'>$($wx.Icon)</span><span class='dline-tx'><b>Tiempo</b><small>$(HtmlEnc $wx.Texto)</small></span><span class='dline-v'>$($wx.TMax)&deg;/$($wx.TMin)&deg;<small>&#127783;&#65039; $($wx.Rain)%</small></span></div>")
+    }
+    [void]$itinHtml.Append("<div class='meals'>")
+    [void]$itinHtml.Append("<div class='meal'><span class='meal-l'>&#127869; Desayuno</span><span class='ed' data-k='d$iDia-de'>$(HtmlEnc $dd.desayuno)</span></div>")
+    [void]$itinHtml.Append("<div class='meal'><span class='meal-l'>&#127860; Comida</span><span class='ed' data-k='d$iDia-co'>$(HtmlEnc $dd.comida)</span></div>")
+    [void]$itinHtml.Append("<div class='meal'><span class='meal-l'>&#127869; Cena</span><span class='ed' data-k='d$iDia-ce'>$(HtmlEnc $dd.cena)</span></div>")
+    [void]$itinHtml.Append("</div>")
+    $daySit = @($Data.sitios | Where-Object { $_.PSObject.Properties['dia'] -and [int]$_.dia -eq $i })
+    if ($daySit.Count -gt 0) {
+      [void]$itinHtml.Append("<div class='dsites'><div class='dsites-t'>Sitios de este dia</div>")
+      foreach ($s in $daySit) {
+        $sm = "https://www.google.com/maps/search/?api=1&query=$(([double]$s.lat).ToString('0.######',$INV)),$(([double]$s.lon).ToString('0.######',$INV))"
+        [void]$itinHtml.Append("<a class='dsite' href='$sm' target='_blank'>&#128205; $(HtmlEnc $s.nombre)<span>&rsaquo;</span></a>")
+      }
+      [void]$itinHtml.Append("</div>")
+    }
+    [void]$itinHtml.Append("</div></div></div>")
+  }
+  [void]$itinHtml.Append("</div>")
+
+  # ---- Tarjeta "Hoy" / preparativos (cambia segun la fecha) ----
+  $hoyHtml = New-Object Text.StringBuilder
+  if ($todayIdx -ge 0 -and $todayIdx -lt $Data.dias.Count) {
+    $tdd = $Data.dias[$todayIdx]
+    $tp = [string]$tdd.fecha -split ' - ', 2
+    $ttitle = if ($tp.Count -ge 2) { $tp[1].Trim() } else { $tp[0].Trim() }
+    $tteaser = ([string]$tdd.manana -split '\. ')[0]
+    [void]$hoyHtml.Append("<div class='card hoy spot'><div class='hoy-eyebrow'>&#9733; Lo de hoy &middot; dia $todayIdx de $($Data.dias.Count - 1)</div>")
+    [void]$hoyHtml.Append("<div class='hoy-title'>$(HtmlEnc $ttitle)</div><div class='hoy-teaser'>$(HtmlEnc $tteaser)</div>")
+    foreach ($g in @($ecos | Where-Object { $_.Dia -eq $todayIdx -and $_.Reco })) { $r=$g.Reco; [void]$hoyHtml.Append("<div class='hoy-line'>&#9981; $(HtmlEnc $r.Rotulo) &middot; $(([double]$r.Precio).ToString('0.000',$INV)) &euro;/L</div>") }
+    if ($dayWx.ContainsKey($todayIdx)) { $w=$dayWx[$todayIdx]; [void]$hoyHtml.Append("<div class='hoy-line'>$($w.Icon) $($w.TMax)&deg;/$($w.TMin)&deg; &middot; $($w.Rain)% lluvia</div>") }
+    [void]$hoyHtml.Append("<button class='hoy-btn' onclick='irAlDia($todayIdx)'>Ver el dia completo &rsaquo;</button></div>")
+  }
+  elseif ($todayIdx -eq 99) {
+    [void]$hoyHtml.Append("<div class='card hoy spot'><div class='hoy-eyebrow'>Viaje terminado</div><div class='hoy-teaser'>Esperamos que fuera un viajazo. El plan sigue aqui por si quereis recordar algo.</div></div>")
+  }
+  else {
+    [void]$hoyHtml.Append("<div class='card hoy'><div class='hoy-eyebrow'>Preparativos</div><div class='rings'>")
+    foreach ($rg in @(@('res','Reservas'), @('mal','Maleta'), @('com','Compra'))) {
+      [void]$hoyHtml.Append("<div class='ring'><svg viewBox='0 0 44 44'><circle class='ring-bg' cx='22' cy='22' r='18'/><circle class='ring-fg' id='ring-$($rg[0])' cx='22' cy='22' r='18'/></svg><div class='ring-c' id='rv-$($rg[0])'>0/0</div><div class='ring-l'>$($rg[1])</div></div>")
+    }
+    [void]$hoyHtml.Append("</div><div class='hint' style='margin:12px 0 0'>Reservas, maleta y compra: se actualizan solos y los veis los dos.</div></div>")
   }
 
   # datos para JS
@@ -515,6 +588,55 @@ function Build-Html {
   .reset{background:var(--card);border:1px solid var(--line);color:var(--mut);border-radius:10px;padding:8px 13px;font-size:12.5px;cursor:pointer;font-weight:700}
   body.editing .ed{outline:1px dashed var(--ac);background:var(--acs);border-radius:5px;padding:0 3px}
   body.editing .ed:focus{outline:2px solid var(--ac);background:var(--card)}
+  .trip{position:relative}
+  .jday{display:flex;gap:12px}
+  .jnode{flex:none;width:30px;display:flex;flex-direction:column;align-items:center}
+  .jdot{width:30px;height:30px;border-radius:50%;background:var(--grad);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px -6px rgba(59,91,255,.6)}
+  .jdot.hoy{background:var(--grad-gd);box-shadow:0 0 0 3px var(--gds),0 6px 14px -6px rgba(15,174,110,.7)}
+  .jnode::after{content:"";flex:1;width:2px;background:var(--line);margin-top:4px}
+  .jday:last-child .jnode::after{display:none}
+  .jcard{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:var(--r-s);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-s)}
+  .jcard.open{box-shadow:var(--shadow)}
+  .jhead{width:100%;background:none;border:none;cursor:pointer;text-align:left;padding:13px 14px;display:flex;align-items:center;gap:10px}
+  .jmeta{flex:1;min-width:0}
+  .jdate{font-size:11px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:6px}
+  .jtitle{font-weight:800;font-size:15px;letter-spacing:-.01em;margin-top:1px}
+  .jteaser{color:var(--mut);font-size:12.5px;margin-top:2px;line-height:1.35}
+  .jcard.open .jteaser{display:none}
+  .jright{display:flex;align-items:center;gap:8px;flex:none}
+  .jwx{font-size:12.5px;font-weight:700;color:var(--mut);white-space:nowrap}
+  .hoytag{background:var(--grad-gd);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em}
+  .jbody{display:none;padding:0 14px 14px}
+  .jcard.open .jbody{display:block}
+  .seg{font-size:14px;margin:10px 0;color:var(--ink-soft);line-height:1.5}
+  .seg-t{display:inline-block;background:var(--acs);color:var(--ac-ink);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;border-radius:7px;margin-right:7px}
+  .dline{display:flex;align-items:center;gap:11px;padding:11px 12px;margin:8px 0;background:var(--card-2);border:1px solid var(--line);border-radius:12px;text-decoration:none;color:var(--ink)}
+  .dline.gas{background:var(--gds);border-color:transparent}
+  .dline-ic{font-size:18px;flex:none;width:24px;text-align:center}
+  .dline-tx{flex:1;min-width:0;display:flex;flex-direction:column;font-size:13.5px;font-weight:700}
+  .dline-tx small{font-weight:600;color:var(--mut);font-size:11.5px}
+  .dline-v{font-weight:800;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;font-size:15px;color:var(--gd-ink)}
+  .dline-v small{font-weight:700;color:var(--mut);font-size:10px}
+  .meals{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;display:flex;flex-direction:column;gap:9px}
+  .meal{font-size:13.5px;display:flex;flex-direction:column;gap:1px;color:var(--ink-soft)}
+  .meal-l{font-size:10.5px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+  .dsites{margin-top:12px;border-top:1px dashed var(--line);padding-top:8px}
+  .dsites-t{font-size:10.5px;font-weight:800;color:var(--ac-ink);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+  .dsite{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:13.5px;font-weight:700}
+  .dsite:first-of-type{border-top:none} .dsite span{color:var(--ac);font-size:18px}
+  .hoy.spot{border-color:var(--ac)}
+  .hoy-eyebrow{font-size:11px;font-weight:800;color:var(--ac-ink);text-transform:uppercase;letter-spacing:.07em}
+  .hoy-title{font-size:18px;font-weight:800;letter-spacing:-.01em;margin-top:3px}
+  .hoy-teaser{color:var(--ink-soft);font-size:13.5px;margin-top:4px;line-height:1.4}
+  .hoy-line{font-size:13px;color:var(--mut);margin-top:7px;font-weight:600}
+  .hoy-btn{margin-top:12px;background:var(--grad);color:#fff;border:none;border-radius:11px;padding:10px 16px;font-weight:800;font-size:13.5px;cursor:pointer;box-shadow:0 8px 16px -8px rgba(59,91,255,.6)}
+  .rings{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+  .ring{position:relative}
+  .ring svg{width:62px;height:62px;display:block;margin:0 auto}
+  .ring-bg{fill:none;stroke:var(--line);stroke-width:5}
+  .ring-fg{fill:none;stroke:var(--gd);stroke-width:5;stroke-linecap:round;stroke-dasharray:113.1;stroke-dashoffset:113.1;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset .5s ease}
+  .ring-c{position:absolute;top:0;left:0;right:0;height:62px;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800}
+  .ring-l{font-size:11px;color:var(--mut);font-weight:700;text-align:center;margin-top:2px}
   footer{text-align:center;color:var(--mut);font-size:12px;margin-top:22px;padding:0 8px}
 </style>
 </head>
@@ -534,6 +656,7 @@ function Build-Html {
       <div class="big">$(HtmlEnc $Data.coche.modelo) &middot; Gasolina 95</div>
       <svg class="mtn" viewBox="0 0 780 62" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,62 L0,34 L90,12 L180,36 L270,6 L370,38 L470,16 L560,40 L650,10 L730,34 L780,20 L780,62 Z" fill="rgba(255,255,255,.16)"/><path d="M0,62 L0,48 L120,28 L220,48 L320,24 L430,50 L540,30 L650,48 L740,30 L780,44 L780,62 Z" fill="rgba(255,255,255,.28)"/></svg>
     </div>
+    $($hoyHtml.ToString())
     <div class="kpis">
       <div class="kpi"><span class="ki">&#128663;</span><div class="v">$autonomia km</div><div class="l">autonomia deposito lleno</div></div>
       <div class="kpi"><span class="ki">&#128176;</span><div class="v">$($costeIdaVuelta.ToString('0',$INV)) &euro;</div><div class="l">gasolina ida y vuelta aprox</div></div>
@@ -624,14 +747,11 @@ function Build-Html {
 
   <!-- PLAN -->
   <section id="t-plan" class="tab">
-    <h2>Sitios (abrir en Maps)</h2>
-    <div class="card">$($sitiosHtml.ToString())</div>
-    <h2>Plan dia a dia</h2>
     <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-      <span class="hint" style="margin:0">Toca <b>Editar</b> para cambiar los textos del plan. Se guardan en este movil.</span>
+      <span class="hint" style="margin:0">El viaje dia a dia. Toca un dia para ver su <b>plan, gasolinera, tiempo, comidas y sitios</b> juntos. Con <b>Editar</b> cambias los textos (se sincroniza con tu copiloto).</span>
       <span style="display:flex;gap:8px"><button id="resetEdit" class="reset" style="display:none;margin:0" onclick="resetEdits()">Restaurar</button><button id="editBtn" class="add" style="padding:8px 14px" onclick="toggleEdit()">&#9999;&#65039; Editar</button></span>
     </div>
-    $($diasHtml.ToString())
+    $($itinHtml.ToString())
   </section>
 
   <!-- LISTAS (maleta + compra) -->
@@ -729,6 +849,16 @@ function showLista(id, btn){
   document.getElementById('l-compra').style.display = id==='compra'?'':'none';
   document.querySelectorAll('#l-tabs button').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
+}
+function setRing(id,vid,done,total){
+  var C=113.1, c=document.getElementById(id);
+  if(c){ c.style.strokeDashoffset = C*(1-(total?done/total:0)); }
+  var t=document.getElementById(vid); if(t){ t.textContent=done+'/'+total; }
+}
+function irAlDia(i){
+  var b=document.querySelector("nav.tabs button:nth-child(4)"); if(b){ showTab('t-plan',b); }
+  var c=document.getElementById('jday'+i);
+  if(c){ c.classList.add('open'); setTimeout(function(){ c.scrollIntoView({behavior:'smooth',block:'start'}); },80); }
 }
 
 /* ---- Gasolina (la pone PAGADOR, se divide entre todos) ---- */
@@ -842,6 +972,7 @@ function renderMaleta(){
   document.getElementById('m-tot').textContent=shown;
   document.getElementById('m-n').textContent=done;
   document.getElementById('m-bar').style.width=(shown?Math.round(done/shown*100):0)+'%';
+  setRing('ring-mal','rv-mal',maleta.filter(function(m){return m.ok;}).length,maleta.length);
 }
 
 /* ---- Compra (lista del viaje, agrupada y marcable) ---- */
@@ -876,6 +1007,7 @@ function renderCompra(){
   document.getElementById('c-tot').textContent=compra.length;
   document.getElementById('c-n').textContent=done;
   document.getElementById('c-bar').style.width=(compra.length?Math.round(done/compra.length*100):0)+'%';
+  setRing('ring-com','rv-com',done,compra.length);
 }
 
 /* ---- Antes de salir (reservas) ---- */
@@ -890,6 +1022,7 @@ function renderRes(){
       '<span class="txt '+(r.ok?'done':'')+'">'+r.item+'</span>';
     list.appendChild(row);
   });
+  setRing('ring-res','rv-res',reservas.filter(function(r){return r.ok;}).length,reservas.length);
 }
 
 /* ---- Notas ---- */
