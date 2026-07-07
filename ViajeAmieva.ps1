@@ -693,6 +693,9 @@ function Build-Html {
   .ring-c{position:absolute;top:0;left:0;right:0;height:62px;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800}
   .ring-l{font-size:11px;color:var(--mut);font-weight:700;text-align:center;margin-top:2px}
   nav.tabs button{font-size:10px;padding:8px 1px}
+  .aviso{display:flex;gap:12px;align-items:flex-start;background:var(--wns);border-color:transparent;font-size:13.5px;line-height:1.45;color:var(--ink-soft)}
+  .aviso-ic{font-size:22px;flex:none;line-height:1.1}
+  .aviso-t{font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--wn);margin-bottom:3px}
   .tips{list-style:none;margin:0;padding:0}
   .tips li{position:relative;padding:9px 0 9px 22px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-soft);line-height:1.5}
   .tips li:first-child{border-top:none}
@@ -728,6 +731,7 @@ function Build-Html {
       <div class="big">$(HtmlEnc $Data.coche.modelo) &middot; $(HtmlEnc $Data.coche.combustible)</div>
       <svg class="mtn" viewBox="0 0 780 62" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,62 L0,34 L90,12 L180,36 L270,6 L370,38 L470,16 L560,40 L650,10 L730,34 L780,20 L780,62 Z" fill="rgba(255,255,255,.16)"/><path d="M0,62 L0,48 L120,28 L220,48 L320,24 L430,50 L540,30 L650,48 L740,30 L780,44 L780,62 Z" fill="rgba(255,255,255,.28)"/></svg>
     </div>
+    $(if ($Data.PSObject.Properties['avisoIncendio'] -and $Data.avisoIncendio) { "<div class='card aviso'><span class='aviso-ic'>&#9888;&#65039;</span><div><div class='aviso-t'>Aviso de ruta &middot; incendio</div>$(HtmlEnc $Data.avisoIncendio)</div></div>" })
     $($hoyHtml.ToString())
     <div class="kpis">
       <div class="kpi"><span class="ki">&#128663;</span><div class="v" style="$(if(-not $cocheOk){'font-size:15px;color:var(--wn)'})">$autonomiaTxt</div><div class="l">autonomia deposito lleno</div></div>
@@ -861,7 +865,7 @@ function Build-Html {
   <section id="t-coche" class="tab">
     <h2>Autonomia y coste</h2>
     <div class="card">
-      $(if (-not $cocheOk) { "<div class='lead' style='background:var(--wns);border-color:transparent'><div class='t' style='color:var(--wn)'>por confirmar</div>Aun no tengo el <b>ano, motor (gasolina/diesel) y deposito</b> del Renault Clio, asi que no pongo numeros inventados. En cuanto me los pases, calculo autonomia y coste reales. (Un Clio antiguo suele rondar 45-50 L, pero lo confirmo contigo.)</div>" })
+      $(if (-not $cocheOk) { "<div class='lead' style='background:var(--wns);border-color:transparent'><div class='t' style='color:var(--wn)'>por confirmar</div>Ya se que el Clio es <b>gasolina</b>. Falta el <b>ano, la version del motor y el deposito</b> para calcular autonomia y coste reales (sin inventar cifras). Un Clio antiguo suele rondar 45-50 L, pero lo confirmo contigo.</div>" })
       <table style="margin-top:12px"><tr><th>Tramo (ida)</th><th class="num">km</th><th class="num">litros</th><th class="num">coste</th></tr>
         $($tramosHtml.ToString())
         <tr style="font-weight:700"><td>Total ida</td><td class="num">$($kmIda.ToString('0',$INV))</td><td class="num">$(if ($cocheOk) { $litrosIda.ToString('0.0',$INV) } else { '?' })</td><td class="num">$(if ($cocheOk) { "$($costeIda.ToString('0.00',$INV)) &euro;" } else { 'por confirmar' })</td></tr>
