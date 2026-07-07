@@ -745,7 +745,7 @@ function Build-Html {
     <h2>El tiempo en Amieva</h2>
     <div class="card">
       <div class="wgrid">$($weatherHtml.ToString())</div>
-      $(if (-not $hayTiempo) { "<p class='hint' style='margin:10px 0 0'>La prevision aparece cuando faltan ~15 dias. Vuelve a abrir el panel mas cerca de la fecha.</p>" } else { "<p class='hint' style='margin:10px 0 0'>Maximas/minimas y probabilidad de lluvia. Se actualiza cada vez que abres el panel.</p>" })
+      $(if (-not $hayTiempo) { "<p class='hint' style='margin:10px 0 0'>La prevision aparece cuando faltan ~15 dias.</p>" } else { "<p class='hint' style='margin:10px 0 0'>Maximas/minimas y probabilidad de lluvia. Se actualiza sola cada dia en la nube (no hace falta tu PC).</p>" })
     </div>
 
     <h2>Antes de salir</h2>
