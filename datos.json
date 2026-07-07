@@ -26,6 +26,8 @@
   },
   "rutaNota": "Peajes: por AUTOPISTA ~30 EUR ida y vuelta (peajes incluidos). Por AUTOVIA (gratis) 10-15 EUR pero 1 h mas de viaje. -- ESTRATEGIA GASOLINA: llena en Alcampo de Logrono (lo mas barato) y da un ultimo repostaje al SALIR de Burgos. NO se reposta en Riano (caro). Ruta por Oseja: ultimo deposito barato en Guardo (Cobasguar ~1,42 EUR/L; ojo horario: domingo cerrado, sabado hasta 15h; alternativa Avia 6-22h). Ruta por Pajares: con Logrono + Burgos deberia llegar; si hace falta, repostar en Cangas de Onis (ESC Petroleos). En Amieva NO hay surtidor: el mas cercano es Cangas de Onis (~20 km, 6-22h). En Asturias llena barato en Ballenoil de Arriondas (dias 1-3). A la vuelta, El Centro (Llanes) ANTES de comer, viniendo de Ribadesella.",
   "avisoIncendio": "La N-625 por Oseja de Sajambre puede estar CORTADA por un incendio. La ruta (Oseja/Beyos vs Pajares) se decide el DIA 10 segun el parte de la DGT. Si esta cortada, el desvio es por el Puerto de Tarna.",
+  "navPrincipal": "https://www.google.com/maps/dir/?api=1&origin=Zaragoza&destination=43.241519,-5.073394&waypoints=Logroño|Restaurante+Abrasamer+Villatoro+Burgos|Guardo|Riaño,+León&travelmode=driving&avoid=tolls",
+  "navSecundario": "https://www.google.com/maps/dir/?api=1&origin=Zaragoza&destination=43.241519,-5.073394&waypoints=Logroño|Restaurante+Abrasamer+Villatoro+Burgos|Aguilar+de+Campoo|Reinosa|Llanes&travelmode=driving&avoid=tolls",
   "paradas": [
     { "nombre": "Logrono - Alcampo Parque Rioja (echar + comprar cena dia 0)", "prov": "26", "lat": 42.4627, "lon": -2.4449, "radioKm": 9, "dia": 0 },
     { "nombre": "Burgos (repostar al salir tras comer)", "prov": "09", "lat": 42.363, "lon": -3.703, "radioKm": 4.5, "dia": 0 },
@@ -125,7 +127,7 @@
     {
       "fecha": "Sab 11 - Dia 0 (llegada)",
       "manana": "Salimos de Zaragoza hacia Asturias. Repostar en Alcampo Parque Rioja (Logrono) y comprar alli la cena de hoy + desayunos.",
-      "tarde": "Parada en Burgos para comer. Echar gasolina al salir de Burgos (la barata). NO repostar en Riano. Ruta por Oseja: ultimo repostaje barato antes de la montana en Guardo (Cobasguar ~1,42 EUR/L; domingo cerrado, sabado solo hasta 15h; alternativa Avia 6-22h).",
+      "tarde": "Parada en Burgos para comer en el Restaurante Abrasamer (Villatoro). Mientras comemos, comprobar si el incendio de Oseja sigue cortando la N-625 (parte de la DGT) para decidir la ruta. Echar gasolina al salir de Burgos (la barata). NO repostar en Riano. Ruta por Oseja: ultimo repostaje barato antes de la montana en Guardo (Cobasguar ~1,42 EUR/L; domingo cerrado, sabado solo hasta 15h; alternativa Avia 6-22h).",
       "noche": "Llegada a Amieva, recibir/saludar a Jorge. Vuelta por el pueblo. Cena (ya comprada en Logrono). Mirar que falta en la casa. OJO: en Amieva no hay surtidor; el mas cercano es Cangas de Onis (ESC Petroleos, ~20 km, 6-22h).",
       "desayuno": "En vuestras casas",
       "comida": "Restaurante en Burgos",

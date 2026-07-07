@@ -696,6 +696,10 @@ function Build-Html {
   .aviso{display:flex;gap:12px;align-items:flex-start;background:var(--wns);border-color:transparent;font-size:13.5px;line-height:1.45;color:var(--ink-soft)}
   .aviso-ic{font-size:22px;flex:none;line-height:1.1}
   .aviso-t{font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--wn);margin-bottom:3px}
+  .navbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:12px;font-weight:800;font-size:14px;text-decoration:none;margin-top:9px;box-sizing:border-box}
+  .navbtn.a{background:var(--grad);color:#fff;box-shadow:0 8px 16px -8px rgba(59,91,255,.6)}
+  .navbtn.a:active{transform:scale(.99)}
+  .navbtn.b{background:var(--card-2);color:var(--ac-ink);border:1px solid var(--ac)}
   .tips{list-style:none;margin:0;padding:0}
   .tips li{position:relative;padding:9px 0 9px 22px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-soft);line-height:1.5}
   .tips li:first-child{border-top:none}
@@ -732,6 +736,7 @@ function Build-Html {
       <svg class="mtn" viewBox="0 0 780 62" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,62 L0,34 L90,12 L180,36 L270,6 L370,38 L470,16 L560,40 L650,10 L730,34 L780,20 L780,62 Z" fill="rgba(255,255,255,.16)"/><path d="M0,62 L0,48 L120,28 L220,48 L320,24 L430,50 L540,30 L650,48 L740,30 L780,44 L780,62 Z" fill="rgba(255,255,255,.28)"/></svg>
     </div>
     $(if ($Data.PSObject.Properties['avisoIncendio'] -and $Data.avisoIncendio) { "<div class='card aviso'><span class='aviso-ic'>&#9888;&#65039;</span><div><div class='aviso-t'>Aviso de ruta &middot; incendio</div>$(HtmlEnc $Data.avisoIncendio)</div></div>" })
+    $(if ($Data.PSObject.Properties['navPrincipal'] -and $Data.navPrincipal) { "<div class='card navcard'><div class='hoy-eyebrow'>&#128663; Navegacion GPS (ida)</div><div class='hint' style='margin:6px 0 4px'>Un toque y arranca Google Maps. La principal es por Oseja; si el incendio corta la N-625, usa el Plan B (Pajares).</div><a class='navbtn a' href='$(HtmlEnc $Data.navPrincipal)' target='_blank' rel='noopener'>&#9654; Iniciar ruta principal &middot; por Oseja</a><a class='navbtn b' href='$(HtmlEnc $Data.navSecundario)' target='_blank' rel='noopener'>&#9654; Plan B &middot; por Pajares (si corta el incendio)</a></div>" })
     $($hoyHtml.ToString())
     <div class="kpis">
       <div class="kpi"><span class="ki">&#128663;</span><div class="v" style="$(if(-not $cocheOk){'font-size:15px;color:var(--wn)'})">$autonomiaTxt</div><div class="l">autonomia deposito lleno</div></div>
@@ -1129,8 +1134,22 @@ function toggleEdit(){
   document.getElementById('editBtn').innerHTML = editing ? '&#10003; Hecho' : '&#9999;&#65039; Editar';
   document.getElementById('resetEdit').style.display = editing ? '' : 'none';
 }
-document.addEventListener('input', e=>{ const t=e.target; if(t.classList && t.classList.contains('ed')){ edits[t.dataset.k]=t.innerText; persist('edits', edits); } });
-function resetEdits(){ if(confirm('Borrar los cambios del plan y volver al original?')){ edits={}; persist('edits', edits); location.reload(); } }
+/* Las ediciones se guardan CAMPO POR CAMPO (nodo objeto en Firebase), asi dos
+   personas editando campos distintos no se pisan y no se pierde nada. */
+function saveEdit(k,v){
+  if(DB){ DB.child('edits').child(k).set(v); }
+  else { edits[k]=v; localStorage.setItem('viajeAmieva_edits', JSON.stringify(edits)); }
+}
+function bindEdits(){
+  if(DB){
+    DB.child('edits').on('value', function(s){ var v=s.val(); edits=(v && typeof v==='object' && !Array.isArray(v))?v:{}; applyEdits(); });
+  } else {
+    try{ var lv=JSON.parse(localStorage.getItem('viajeAmieva_edits')); edits=(lv && typeof lv==='object')?lv:{}; }catch(e){ edits={}; }
+    applyEdits();
+  }
+}
+document.addEventListener('input', e=>{ const t=e.target; if(t.classList && t.classList.contains('ed')){ edits[t.dataset.k]=t.innerText; saveEdit(t.dataset.k, t.innerText); } });
+function resetEdits(){ if(confirm('Borrar los cambios del plan y volver al original?')){ if(DB){ DB.child('edits').remove(); } else { localStorage.removeItem('viajeAmieva_edits'); } edits={}; location.reload(); } }
 
 /* Arranque: enlaza cada parte al almacen (Firebase o local) */
 renderComida();
@@ -1140,7 +1159,7 @@ bind('maleta',   function(v){ maleta=Array.isArray(v)?v:[]; renderMaleta(); },  
 bind('compra',   function(v){ compra=Array.isArray(v)?v:[]; renderCompra(); },  SEED_COMPRA.map(x=>({item:x.item,grupo:x.grupo,ok:false})));
 bind('reservas', function(v){ reservas=Array.isArray(v)?v:[]; renderRes(); },   SEED_RESERVAS.map(x=>({item:x,ok:false})));
 bind('notas',    function(v){ if(document.activeElement!==ta) ta.value=(typeof v==='string')?v:''; }, '');
-bind('edits',    function(v){ edits=(v&&typeof v==='object'&&!Array.isArray(v))?v:{}; applyEdits(); }, {});
+bindEdits();
 </script>
 '@
 
