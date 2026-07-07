@@ -237,10 +237,22 @@ function Resolve-Economics {
 function Build-Html {
   param($Data, $Route, [bool]$ApiOk, $Weather = @{})
 
-  $consumo  = [double]$Data.coche.consumoL100
-  $deposito = [double]$Data.coche.depositoL
+  # Datos del coche. Si no estan confirmados (null/0), se muestran como "por confirmar"
+  # y NO se calculan autonomia ni costes (no inventamos cifras del coche).
+  $consumoSet = 0.0
+  if ($Data.coche.PSObject.Properties['consumoL100'] -and $null -ne $Data.coche.consumoL100) {
+    $tmp = 0.0; if ([double]::TryParse([string]$Data.coche.consumoL100,[Globalization.NumberStyles]::Float,$INV,[ref]$tmp)) { $consumoSet = $tmp }
+  }
+  $depositoSet = 0.0
+  if ($Data.coche.PSObject.Properties['depositoL'] -and $null -ne $Data.coche.depositoL) {
+    $tmp = 0.0; if ([double]::TryParse([string]$Data.coche.depositoL,[Globalization.NumberStyles]::Float,$INV,[ref]$tmp)) { $depositoSet = $tmp }
+  }
+  $cocheOk = ($consumoSet -gt 0 -and $depositoSet -gt 0)
+  # $consumo es solo para el calculo interno de "compensa el desvio" (no se muestra como dato del coche)
+  $consumo  = if ($consumoSet -gt 0) { $consumoSet } else { 7.0 }
+  $deposito = $depositoSet
   $litros   = [double]$Data.litrosPorRepostaje
-  $autonomia = if ($consumo -gt 0) { [int][math]::Round($deposito / $consumo * 100) } else { 0 }
+  $autonomia = if ($cocheOk) { [int][math]::Round($deposito / $consumo * 100) } else { 0 }
 
   # economia por parada
   $ecos = @()
@@ -306,18 +318,24 @@ function Build-Html {
     }
   }
 
-  # tramos ida
+  # tramos ida (litros/coste solo si el coche esta confirmado)
   $kmIda = 0.0
   $tramosHtml = New-Object Text.StringBuilder
   foreach ($t in $Data.tramosIda) {
     $km = [double]$t.km; $kmIda += $km
-    $litrosT = [math]::Round($km * $consumo / 100, 1)
-    $coste  = [math]::Round($litrosT * $refPrice, 2)
-    [void]$tramosHtml.Append("<tr><td>$(HtmlEnc $t.de) &rarr; $(HtmlEnc $t.a)</td><td class='num'>$($km.ToString('0',$INV))</td><td class='num'>$($litrosT.ToString('0.0',$INV))</td><td class='num'>$($coste.ToString('0.00',$INV)) &euro;</td></tr>")
+    if ($cocheOk) {
+      $litrosT = [math]::Round($km * $consumo / 100, 1)
+      $coste  = [math]::Round($litrosT * $refPrice, 2)
+      $litCell = "$($litrosT.ToString('0.0',$INV))"
+      $cosCell = "$($coste.ToString('0.00',$INV)) &euro;"
+    } else { $litCell = '?'; $cosCell = 'por confirmar' }
+    [void]$tramosHtml.Append("<tr><td>$(HtmlEnc $t.de) &rarr; $(HtmlEnc $t.a)</td><td class='num'>$($km.ToString('0',$INV))</td><td class='num'>$litCell</td><td class='num'>$cosCell</td></tr>")
   }
-  $litrosIda = [math]::Round($kmIda * $consumo / 100, 1)
-  $costeIda  = [math]::Round($litrosIda * $refPrice, 2)
+  $litrosIda = if ($cocheOk) { [math]::Round($kmIda * $consumo / 100, 1) } else { 0 }
+  $costeIda  = if ($cocheOk) { [math]::Round($litrosIda * $refPrice, 2) } else { 0 }
   $costeIdaVuelta = [math]::Round($costeIda * 2, 2)
+  $autonomiaTxt   = if ($cocheOk) { "$autonomia km" } else { 'por confirmar' }
+  $costeIVTxt     = if ($cocheOk) { "$($costeIdaVuelta.ToString('0',$INV)) &euro;" } else { 'por confirmar' }
 
   # gasolineras (server-side, con recomendacion y "ver otras")
   $gasHtml = New-Object Text.StringBuilder
@@ -452,6 +470,43 @@ function Build-Html {
   $fechaPrecios = if ($Route.Fecha) { HtmlEnc $Route.Fecha } else { 'n/d' }
   $genTime = (Get-Date).ToString('dd/MM/yyyy HH:mm')
   $apiBadge = if ($ApiOk) { "<span class='pill ok'>&#9679; precios de hoy ($fechaPrecios)</span>" } else { "<span class='pill warn'>&#9679; sin conexion (precio aprox.)</span>" }
+
+  # ---- Conduccion y consejos (Bloque 1 general + Bloque 2 por tramo, con variantes de puerto) ----
+  $condHtml = New-Object Text.StringBuilder
+  if ($Data.PSObject.Properties['conduccion']) {
+    $cd = $Data.conduccion
+    [void]$condHtml.Append("<h2>&#128293; No calentar el motor</h2><div class='card'><ul class='tips'>")
+    foreach ($x in $cd.motor) { [void]$condHtml.Append("<li>$(HtmlEnc $x)</li>") }
+    [void]$condHtml.Append("</ul></div>")
+    [void]$condHtml.Append("<h2>&#128184; Conducir gastando menos</h2><div class='card'><ul class='tips'>")
+    foreach ($x in $cd.eficiente) { [void]$condHtml.Append("<li>$(HtmlEnc $x)</li>") }
+    [void]$condHtml.Append("</ul></div>")
+    [void]$condHtml.Append("<h2>Consejos por tramo (ida)</h2>")
+    $ti = 0
+    foreach ($tr in $cd.tramos) {
+      $ti++
+      $num = if ($ti -le 3) { $ti } else { $ti + 1 }
+      [void]$condHtml.Append("<div class='trcard'><div class='trhead'><span class='trnum'>$num</span><div class='trmeta'><div class='trn'>$(HtmlEnc $tr.n)</div><div class='trtipo'>$(HtmlEnc $tr.tipo)</div></div></div>")
+      [void]$condHtml.Append("<div class='trc'>$(HtmlEnc $tr.c)</div>")
+      if ("$($tr.gas)".Trim() -ne '') { [void]$condHtml.Append("<div class='trgas'>&#9981; $(HtmlEnc $tr.gas)</div>") }
+      [void]$condHtml.Append("</div>")
+      if ($ti -eq 3) {
+        [void]$condHtml.Append("<div class='trcard puerto'><div class='trhead'><span class='trnum alt'>4</span><div class='trmeta'><div class='trn'>Puerto de montana</div><div class='trtipo'>Dos variantes &middot; se decide el dia 10</div></div></div>")
+        [void]$condHtml.Append("<div class='trc'>$(HtmlEnc $cd.puertosIntro)</div>")
+        [void]$condHtml.Append("<div class='chips' id='var-tabs'>")
+        $vfirst = $true
+        foreach ($pv in $cd.puertos) { $on = if ($vfirst) { ' class=''on''' } else { '' }; [void]$condHtml.Append("<button data-v='$($pv.id)'$on onclick='showVariante(this)'>$(HtmlEnc $pv.n)</button>"); $vfirst = $false }
+        [void]$condHtml.Append("</div>")
+        $vfirst = $true
+        foreach ($pv in $cd.puertos) {
+          $disp = if ($vfirst) { '' } else { 'display:none' }
+          [void]$condHtml.Append("<div class='varbloc' id='var-$($pv.id)' style='$disp'><div class='varruta'>&#128205; $(HtmlEnc $pv.ruta)</div><div class='trtipo' style='margin:3px 0 7px'>$(HtmlEnc $pv.tipo)</div><div class='trc'>$(HtmlEnc $pv.c)</div></div>")
+          $vfirst = $false
+        }
+        [void]$condHtml.Append("</div>")
+      }
+    }
+  }
 
   $html = @"
 <!DOCTYPE html>
@@ -637,6 +692,23 @@ function Build-Html {
   .ring-fg{fill:none;stroke:var(--gd);stroke-width:5;stroke-linecap:round;stroke-dasharray:113.1;stroke-dashoffset:113.1;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset .5s ease}
   .ring-c{position:absolute;top:0;left:0;right:0;height:62px;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800}
   .ring-l{font-size:11px;color:var(--mut);font-weight:700;text-align:center;margin-top:2px}
+  nav.tabs button{font-size:10px;padding:8px 1px}
+  .tips{list-style:none;margin:0;padding:0}
+  .tips li{position:relative;padding:9px 0 9px 22px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-soft);line-height:1.5}
+  .tips li:first-child{border-top:none}
+  .tips li::before{content:"";position:absolute;left:2px;top:16px;width:7px;height:7px;border-radius:50%;background:var(--grad)}
+  .trcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-s);padding:14px;margin-bottom:10px;box-shadow:var(--shadow-s)}
+  .trcard.puerto{border-color:var(--ac);background:var(--acs)}
+  .trhead{display:flex;align-items:center;gap:11px;margin-bottom:9px}
+  .trnum{flex:none;width:28px;height:28px;border-radius:50%;background:var(--grad);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}
+  .trnum.alt{background:var(--grad-gd)}
+  .trmeta{min-width:0}
+  .trn{font-weight:800;font-size:14.5px;letter-spacing:-.01em}
+  .trtipo{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+  .trc{font-size:14px;color:var(--ink-soft);line-height:1.5}
+  .trgas{margin-top:9px;background:var(--gds);border-radius:10px;padding:9px 11px;font-size:13px;font-weight:600;color:var(--ink)}
+  .varbloc{margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .varruta{font-weight:800;font-size:13.5px;color:var(--ac-ink)}
   footer{text-align:center;color:var(--mut);font-size:12px;margin-top:22px;padding:0 8px}
 </style>
 </head>
@@ -653,13 +725,13 @@ function Build-Html {
       <div class="sun"></div>
       <div class="eyebrow">$(HtmlEnc $Data.fechas)</div>
       <div class="cd">$diasTxt</div>
-      <div class="big">$(HtmlEnc $Data.coche.modelo) &middot; Gasolina 95</div>
+      <div class="big">$(HtmlEnc $Data.coche.modelo) &middot; $(HtmlEnc $Data.coche.combustible)</div>
       <svg class="mtn" viewBox="0 0 780 62" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,62 L0,34 L90,12 L180,36 L270,6 L370,38 L470,16 L560,40 L650,10 L730,34 L780,20 L780,62 Z" fill="rgba(255,255,255,.16)"/><path d="M0,62 L0,48 L120,28 L220,48 L320,24 L430,50 L540,30 L650,48 L740,30 L780,44 L780,62 Z" fill="rgba(255,255,255,.28)"/></svg>
     </div>
     $($hoyHtml.ToString())
     <div class="kpis">
-      <div class="kpi"><span class="ki">&#128663;</span><div class="v">$autonomia km</div><div class="l">autonomia deposito lleno</div></div>
-      <div class="kpi"><span class="ki">&#128176;</span><div class="v">$($costeIdaVuelta.ToString('0',$INV)) &euro;</div><div class="l">gasolina ida y vuelta aprox</div></div>
+      <div class="kpi"><span class="ki">&#128663;</span><div class="v" style="$(if(-not $cocheOk){'font-size:15px;color:var(--wn)'})">$autonomiaTxt</div><div class="l">autonomia deposito lleno</div></div>
+      <div class="kpi"><span class="ki">&#128176;</span><div class="v" style="$(if(-not $cocheOk){'font-size:15px;color:var(--wn)'})">$costeIVTxt</div><div class="l">gasolina ida y vuelta aprox</div></div>
       <div class="kpi"><span class="ki">&#128197;</span><div class="v">8</div><div class="l">dias de viaje</div></div>
       <div class="kpi"><span class="ki">&#9981;</span><div class="v">$($refPrice.ToString('0.000',$INV))</div><div class="l">&euro;/L mas barato ruta</div></div>
     </div>
@@ -696,15 +768,9 @@ function Build-Html {
     <div class="card" style="padding:14px">
       $($gasHtml.ToString())
     </div>
-    <h2>Coste y autonomia</h2>
+    <h2>Peajes y estrategia</h2>
     <div class="card"><div class="lead" style="background:#fff7ed;border-color:#fed7aa"><div class="t" style="color:var(--wn)">peajes y ruta</div>$(HtmlEnc $Data.rutaNota)</div></div>
-    <div class="card">
-      <table><tr><th>Tramo (ida)</th><th class="num">km</th><th class="num">litros</th><th class="num">coste</th></tr>
-        $($tramosHtml.ToString())
-        <tr style="font-weight:700"><td>Total ida</td><td class="num">$($kmIda.ToString('0',$INV))</td><td class="num">$($litrosIda.ToString('0.0',$INV))</td><td class="num">$($costeIda.ToString('0.00',$INV)) &euro;</td></tr>
-      </table>
-      <p class="hint" style="margin-top:12px">Con el deposito lleno aguantas ~$autonomia km, asi que el tramo final a Amieva lo haces de sobra aunque no haya gasolineras cerca. Reposta despues de Burgos o en Riano antes de subir.</p>
-    </div>
+    <p class="hint" style="margin:6px 2px 0">La autonomia y el coste por tramo estan en la pestana <b>Coche</b>.</p>
   </section>
 
   <!-- DINERO -->
@@ -791,6 +857,20 @@ function Build-Html {
     </div>
   </section>
 
+  <!-- COCHE (autonomia + conduccion) -->
+  <section id="t-coche" class="tab">
+    <h2>Autonomia y coste</h2>
+    <div class="card">
+      $(if (-not $cocheOk) { "<div class='lead' style='background:var(--wns);border-color:transparent'><div class='t' style='color:var(--wn)'>por confirmar</div>Aun no tengo el <b>ano, motor (gasolina/diesel) y deposito</b> del Renault Clio, asi que no pongo numeros inventados. En cuanto me los pases, calculo autonomia y coste reales. (Un Clio antiguo suele rondar 45-50 L, pero lo confirmo contigo.)</div>" })
+      <table style="margin-top:12px"><tr><th>Tramo (ida)</th><th class="num">km</th><th class="num">litros</th><th class="num">coste</th></tr>
+        $($tramosHtml.ToString())
+        <tr style="font-weight:700"><td>Total ida</td><td class="num">$($kmIda.ToString('0',$INV))</td><td class="num">$(if ($cocheOk) { $litrosIda.ToString('0.0',$INV) } else { '?' })</td><td class="num">$(if ($cocheOk) { "$($costeIda.ToString('0.00',$INV)) &euro;" } else { 'por confirmar' })</td></tr>
+      </table>
+      <p class="hint" style="margin-top:12px">$(if ($cocheOk) { "Con el deposito lleno aguantas ~$autonomia km." } else { "La autonomia y el coste se calcularan al confirmar los datos del Clio." }) Cerca de Amieva no hay gasolineras: reposta antes (ver estrategia en Gasolina).</p>
+    </div>
+    $($condHtml.ToString())
+  </section>
+
   <footer>Los precios de gasolina y el tiempo se actualizan solos cada dia. Lo que apuntes (gastos, maleta, notas, ediciones del plan) se guarda en este movil.</footer>
 </div>
 
@@ -800,6 +880,7 @@ function Build-Html {
   <button onclick="showTab('t-dinero',this)"><span class="ic">&#128176;</span>Dinero</button>
   <button onclick="showTab('t-plan',this)"><span class="ic">&#128506;</span>Plan</button>
   <button onclick="showTab('t-listas',this)"><span class="ic">&#128203;</span>Listas</button>
+  <button onclick="showTab('t-coche',this)"><span class="ic">&#128663;</span>Coche</button>
 </nav>
 "@
 
@@ -849,6 +930,11 @@ function showLista(id, btn){
   document.getElementById('l-compra').style.display = id==='compra'?'':'none';
   document.querySelectorAll('#l-tabs button').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
+}
+function showVariante(btn){
+  var id=btn.dataset.v;
+  document.querySelectorAll('#var-tabs button').forEach(function(b){ b.classList.toggle('on', b===btn); });
+  document.querySelectorAll('.varbloc').forEach(function(v){ v.style.display = (v.id==='var-'+id) ? '' : 'none'; });
 }
 function setRing(id,vid,done,total){
   var C=113.1, c=document.getElementById(id);

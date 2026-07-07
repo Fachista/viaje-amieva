@@ -5,10 +5,10 @@
   "casa": "Casa en Asturias (Amieva) - Anfitrion: Jorge - Entrada sab 11 despues 17:00, salida sab 18 antes 11:00",
   "casaCoord": { "lat": 43.2667, "lon": -5.0667 },
   "coche": {
-    "modelo": "Nissan Micra Sport K2 2008",
-    "combustible": "Gasolina 95",
-    "consumoL100": 7.0,
-    "depositoL": 46
+    "modelo": "Renault Clio (modelo antiguo)",
+    "combustible": "Por confirmar",
+    "consumoL100": null,
+    "depositoL": null
   },
   "viajeros": ["Yo", "Daniel", "David", "Diego"],
   "gasolinaPagador": "Yo",
@@ -91,6 +91,34 @@
     "Documentacion del coche y seguro", "Botiquin basico",
     "Calzado comodo para rutas", "Bolsas de basura", "Bocadillos para el piraguismo"
   ],
+  "conduccion": {
+    "motor": [
+      "En las subidas largas de puerto, apaga el aire acondicionado. Es lo que mas ayuda.",
+      "Sube en marcha corta dejando el motor girar suelto (bastantes revoluciones, sin ahogarlo). Regla sin mirar el cuentavueltas: si el coche va sin fuerza, se sacude o tiembla aunque pises, reduce una marcha. Si suena revolucionado pero sube con ganas y sin esfuerzo, vas bien aunque suene mas ruidoso.",
+      "Vigila la aguja de temperatura. En un coche sano se mantiene en el centro; si sube, actua antes de llegar al rojo.",
+      "Si empieza a calentarse: calefaccion del habitaculo a tope (aunque sea julio) para sacar calor del motor mientras buscas donde parar.",
+      "Si llega al rojo o sale vapor: para en sitio seguro y apaga el motor. Dejalo enfriar. NUNCA abras el tapon del radiador en caliente (liquido a presion e hirviendo; espera ~30 min).",
+      "En bajadas de puerto: usa freno motor (marcha corta), no vayas frenando en continuo (recalienta las pastillas)."
+    ],
+    "eficiente": [
+      "En autovia, velocidad de crucero constante ~110-120 km/h. Ni ir a 140 (dispara el consumo) ni bajar a 90 (tardariamos demasiado). El punto medio.",
+      "Suavidad: velocidad constante gana a acelerones y frenazos. Anticipa, levanta el pie antes de frenar.",
+      "Usa la marcha mas alta posible sin que el motor vaya ahogado.",
+      "A/A vs ventanillas: en autovia llana el A/A gasta menos que ir con ventanillas bajadas (aerodinamica). En marcha lenta de puerto, ventanillas (y A/A off por temperatura).",
+      "Neumaticos a la presion correcta de carga."
+    ],
+    "tramos": [
+      { "n": "Zaragoza -> Logrono", "tipo": "Llano - autovia", "c": "Ritmo constante y suave.", "gas": "Repostaje 1: llenar a tope en Logrono (Alcampo, la mas barata, ~1,39 EUR/L)." },
+      { "n": "Logrono -> Burgos", "tipo": "Ondulado - autovia", "c": "Velocidad constante, tramo comodo.", "gas": "" },
+      { "n": "Burgos -> Leon o Guardo (segun ruta)", "tipo": "Meseta - llano y monotono", "c": "Cuidado con el sueno, parada para estirar. Buen sitio para ahorrar sin perder tiempo.", "gas": "Repostaje 2 (ruta Oseja): Guardo (cooperativa Cobasguar, ~1,42 EUR/L) antes de la montana. Domingo cerrado, sabado solo hasta las 15h; alternativa Avia (6-22h todos los dias)." },
+      { "n": "Oviedo -> A-8 -> Arriondas -> Cangas de Onis -> Amieva", "tipo": "Autovia + valle", "c": "Ritmo normal. Cangas -> Amieva por N-625 (~20 km): tramo tranquilo.", "gas": "Repostaje 3 (si hace falta): Cangas de Onis (ESC Petroleos, buena de precio, 6-22h todos los dias). Es el ultimo surtidor antes de Amieva (en Amieva no hay)." }
+    ],
+    "puertosIntro": "Hay DOS variantes de ruta sin decidir. Se decide el dia 10 segun el estado de la N-625 por el incendio de Oseja de Sajambre. Aqui tienes las dos, elige arriba:",
+    "puertos": [
+      { "id": "oseja", "n": "Variante Oseja / Beyos", "ruta": "Riano -> Puerto del Ponton -> Desfiladero de los Beyos -> Amieva", "tipo": "Puerto + garganta", "c": "Subida con A/A off, marcha corta, motor suelto, vigilar la aguja, no adelantar en curva. Bajada por los Beyos con freno motor; carretera estrecha, atencion a desprendimientos. Evitar repostar en Riano (caro)." },
+      { "id": "pajares", "n": "Variante Pajares", "ruta": "Leon -> Puerto de Pajares (N-630) -> Campomanes", "tipo": "Puerto en nacional ancha", "c": "Subida A/A off, marcha corta, usar carriles de subida y dejar pasar. Bajada a Campomanes con freno motor. Si se usa la AP-66/Huerna por tunel: es peaje ~16 EUR/sentido y sin puerto, conduccion normal." }
+    ]
+  },
   "dias": [
     {
       "fecha": "Sab 11 - Dia 0 (llegada)",
