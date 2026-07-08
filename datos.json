@@ -58,8 +58,7 @@
   "reservas": [
     "Reservar piraguismo en Cangas Aventura (35 EUR/persona, dura 2 a 4.5 h)",
     "Confirmar horario y precio del teleferico de Fuentes De (17 EUR/persona, 30 min)",
-    "Mirar horario de la Basilica de Covadonga (5 EUR/persona)",
-    "Investigar restaurante para comer en Potes (dia 3)",
+    "Reservar bus a los Lagos de Covadonga (9 EUR/persona, alsa.es o buslagoscovadonga.es)",
     "Preguntar a Jorge que hay en la casa (sabanas, menaje, etc.)",
     "Repostar lleno antes de subir a Amieva (en Amieva no hay surtidor; el mas cercano, Cangas de Onis ESC Petroleos ~20 km)"
   ],
@@ -67,7 +66,8 @@
     { "nombre": "Casa en Amieva", "lat": 43.2667, "lon": -5.0667, "dia": 0 },
     { "nombre": "Queseria Arriondas Lafuente", "lat": 43.3880, "lon": -5.1830, "dia": 1 },
     { "nombre": "Cangas Aventura - punto de encuentro canoas (Pol. Santa Rita A4)", "lat": 43.377453, "lon": -5.182946, "dia": 2 },
-    { "nombre": "Basilica de Covadonga", "lat": 43.3083, "lon": -5.0556, "dia": 4 },
+    { "nombre": "Basilica de Covadonga (gratis)", "lat": 43.3083, "lon": -5.0556, "dia": 4 },
+    { "nombre": "Lagos de Covadonga (Enol/Ercina, en bus)", "lat": 43.2717, "lon": -4.9878, "dia": 4 },
     { "nombre": "Potes", "lat": 43.1545, "lon": -4.6300, "dia": 3 },
     { "nombre": "Teleferico de Fuentes De", "lat": 43.1486, "lon": -4.8131, "dia": 3 },
     { "nombre": "Gijon - Parking gratis bajo el Acuario", "lat": 43.5439, "lon": -5.6981, "dia": 5 },
@@ -165,7 +165,7 @@
     {
       "fecha": "Mar 14 - Dia 3",
       "manana": "Desayunamos, salimos 11:00. Echar gasolina en Arriondas o Cangas si hace falta. Ir a Potes por la AS-114.",
-      "tarde": "Comer en Potes (investigar restaurante). Ruta corta por el pueblo. Teleferico de Fuentes De (17 EUR/persona, 30 min) o quedarse en el cesped sin subir (gratis). Vuelta pasando por la E.S. Liebana al salir de Potes; si se hace de noche, volver por la N-621 (carretera de abajo).",
+      "tarde": "Comer en Potes en el Restaurante-Asador Bodega Aguilar. Ruta corta por el pueblo. Teleferico de Fuentes De (17 EUR/persona, 30 min) o quedarse en el cesped sin subir (gratis). Vuelta pasando por la E.S. Liebana al salir de Potes; si se hace de noche, volver por la N-621 (carretera de abajo).",
       "noche": "Casa.",
       "desayuno": "Leche con magdalenas / cafe",
       "comida": "Restaurante en Potes",
@@ -173,8 +173,8 @@
     },
     {
       "fecha": "Mie 15 - Dia 4",
-      "manana": "Desayunamos, salimos 9:00. Echar gasolina en Cangas (ESC Petroleos). Basilica de Santa Maria la Real de Covadonga (5 EUR/persona) y dar vueltas por la zona a ver que mas hay.",
-      "tarde": "Volver a casa a comer. Tarde tranquila, lo que se vea por casa.",
+      "manana": "Desayunamos, salimos 9:00. Echar gasolina en Cangas (ESC Petroleos). Subir en coche a la Basilica de Santa Maria la Real de Covadonga: la entrada es GRATIS. Dar vueltas por la zona.",
+      "tarde": "LAGOS DE COVADONGA (Enol y Ercina): el 15 de julio la carretera CO-4 esta CERRADA al coche las 24h. Hay que dejar el coche en un parking (Cangas de Onis, El Bosque, Munigo o El Repelao; 2-3 EUR/coche) y subir en BUS lanzadera: 9 EUR/adulto ida y vuelta (~36 EUR los 4), valido todo el dia. Reservar con antelacion en alsa.es o buslagoscovadonga.es (las reservas online tienen prioridad). Primer bus 8:00, ultima subida ~17:45. Luego volver a casa, tarde tranquila.",
       "noche": "Casa.",
       "desayuno": "Leche con cruasanes",
       "comida": "Arroz con tomate y huevo frito (casa)",
