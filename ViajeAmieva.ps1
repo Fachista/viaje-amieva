@@ -113,22 +113,42 @@ function Invoke-FuelApi {
 # ---------------------------------------------------------------------------
 function Get-Weather {
   param($Data)
-  $result = @{}
-  if (-not $Data.PSObject.Properties['casaCoord']) { return $result }
+  # Casa: date -> wx (para la parrilla de Inicio). Puntos: dia -> wx del sitio de ese dia.
+  $result = [pscustomobject]@{ Casa = @{}; Puntos = @{} }
+  $all = @()   # lista de ubicaciones: casa (dia=-1) + tiempoPuntos por dia
+  if ($Data.PSObject.Properties['casaCoord']) {
+    $all += [pscustomobject]@{ dia=-1; nombre='Amieva'; lat=[double]$Data.casaCoord.lat; lon=[double]$Data.casaCoord.lon }
+  }
+  $nPts = 0
+  if ($Data.PSObject.Properties['tiempoPuntos']) {
+    foreach ($p in $Data.tiempoPuntos) { $all += [pscustomobject]@{ dia=[int]$p.dia; nombre=[string]$p.nombre; lat=[double]$p.lat; lon=[double]$p.lon }; $nPts++ }
+  }
+  if ($all.Count -eq 0) { return $result }
   try {
-    $lat = ([double]$Data.casaCoord.lat).ToString('0.####',$INV)
-    $lon = ([double]$Data.casaCoord.lon).ToString('0.####',$INV)
-    $url = "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Europe%2FMadrid&forecast_days=16"
-    Write-Host "Consultando el tiempo en Amieva..." -ForegroundColor Gray
+    $lats = ($all | ForEach-Object { $_.lat.ToString('0.####',$INV) }) -join ','
+    $lons = ($all | ForEach-Object { $_.lon.ToString('0.####',$INV) }) -join ','
+    $url = "https://api.open-meteo.com/v1/forecast?latitude=$lats&longitude=$lons&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Europe%2FMadrid&forecast_days=16"
+    Write-Host "Consultando el tiempo (Amieva + $nPts sitios)..." -ForegroundColor Gray
     $w = Invoke-FuelApi -Url $url -Retries 2
-    if ($w.PSObject.Properties['daily']) {
-      $t = $w.daily.time
-      for ($i=0; $i -lt $t.Count; $i++) {
-        $result[[string]$t[$i]] = [pscustomobject]@{
-          Code = [int]$w.daily.weather_code[$i]
-          TMax = [int][math]::Round([double]$w.daily.temperature_2m_max[$i])
-          TMin = [int][math]::Round([double]$w.daily.temperature_2m_min[$i])
-          Rain = [int]$w.daily.precipitation_probability_max[$i]
+    $arr = if ($w -is [System.Array]) { $w } else { @($w) }
+    $inicio = $null
+    try { $inicio = [datetime]::ParseExact([string]$Data.fechaInicio,'yyyy-MM-dd',$INV) } catch { }
+    for ($k=0; $k -lt $all.Count -and $k -lt $arr.Count; $k++) {
+      $loc = $arr[$k]
+      if (-not ($loc.PSObject.Properties['daily'])) { continue }
+      $times = $loc.daily.time
+      $pt = $all[$k]
+      if ([int]$pt.dia -eq -1) {
+        for ($j=0; $j -lt $times.Count; $j++) {
+          $result.Casa[[string]$times[$j]] = [pscustomobject]@{ Code=[int]$loc.daily.weather_code[$j]; TMax=[int][math]::Round([double]$loc.daily.temperature_2m_max[$j]); TMin=[int][math]::Round([double]$loc.daily.temperature_2m_min[$j]); Rain=[int]$loc.daily.precipitation_probability_max[$j] }
+        }
+      } elseif ($null -ne $inicio) {
+        $want = $inicio.AddDays([int]$pt.dia).ToString('yyyy-MM-dd')
+        for ($j=0; $j -lt $times.Count; $j++) {
+          if ([string]$times[$j] -eq $want) {
+            $result.Puntos[[int]$pt.dia] = [pscustomobject]@{ Nombre=$pt.nombre; Code=[int]$loc.daily.weather_code[$j]; TMax=[int][math]::Round([double]$loc.daily.temperature_2m_max[$j]); TMin=[int][math]::Round([double]$loc.daily.temperature_2m_min[$j]); Rain=[int]$loc.daily.precipitation_probability_max[$j] }
+            break
+          }
         }
       }
     }
@@ -252,7 +272,7 @@ function Build-Html {
   $consumo  = if ($consumoSet -gt 0) { $consumoSet } else { 7.0 }
   $deposito = $depositoSet
   $litros   = [double]$Data.litrosPorRepostaje
-  $autonomia = if ($cocheOk) { [int][math]::Round($deposito / $consumo * 100) } else { 0 }
+  $autonomia = if (-not $cocheOk) { 0 } elseif ($Data.coche.PSObject.Properties['autonomiaKm'] -and $Data.coche.autonomiaKm) { [int]$Data.coche.autonomiaKm } else { [int][math]::Round($deposito / $consumo * 100) }
 
   # economia por parada
   $ecos = @()
@@ -274,11 +294,13 @@ function Build-Html {
     else               { $diasTxt = "Viaje terminado" }
   } catch { $diasTxt = '' }
 
-  # tiempo: mapea cada dia del viaje a su prevision (si esta disponible)
+  # tiempo: parrilla de Inicio = Amieva (base); por dia = el sitio que se visita ese dia
   $weatherHtml = New-Object Text.StringBuilder
   $hayTiempo = $false
-  $dayWx = @{}     # idx -> @{ Icon; Texto; TMax; TMin; Rain }
+  $dayWx = @{}     # idx -> { Icon; Texto; TMax; TMin; Rain; Nombre }  (tiempo del sitio del dia)
   $dayFecha = @{}  # idx -> "Sab 11"
+  $wxCasa = if ($Weather -and $Weather.PSObject.Properties['Casa']) { $Weather.Casa } else { @{} }
+  $wxPuntos = if ($Weather -and $Weather.PSObject.Properties['Puntos']) { $Weather.Puntos } else { @{} }
   try {
     $inicioW = [datetime]::ParseExact([string]$Data.fechaInicio,'yyyy-MM-dd',$INV)
     $dias3 = @('Dom','Lun','Mar','Mie','Jue','Vie','Sab')
@@ -287,14 +309,21 @@ function Build-Html {
       $key = $fd.ToString('yyyy-MM-dd')
       $etq = $dias3[[int]$fd.DayOfWeek] + ' ' + $fd.Day
       $dayFecha[$i] = $etq
-      if ($Weather.ContainsKey($key)) {
+      if ($wxCasa.ContainsKey($key)) {
         $hayTiempo = $true
-        $wi = $Weather[$key]
+        $wi = $wxCasa[$key]
         $ico = (Get-WeatherIcon $wi.Code)
-        $dayWx[$i] = [pscustomobject]@{ Icon=$ico[0]; Texto=$ico[1]; TMax=$wi.TMax; TMin=$wi.TMin; Rain=$wi.Rain }
         [void]$weatherHtml.Append("<div class='wday'><div class='wd-f'>$etq</div><div class='wd-i'>$($ico[0])</div><div class='wd-t'>$($wi.TMax)&deg; / $($wi.TMin)&deg;</div><div class='wd-r'>&#127783;&#65039; $($wi.Rain)%</div></div>")
       } else {
         [void]$weatherHtml.Append("<div class='wday off'><div class='wd-f'>$etq</div><div class='wd-i'>&middot;&middot;&middot;</div><div class='wd-t muted' style='font-size:11px'>lejos</div></div>")
+      }
+      # tiempo del dia en el SITIO que se visita (para itinerario y "hoy")
+      $pw = $null
+      if ($wxPuntos.ContainsKey($i)) { $pw = $wxPuntos[$i] }
+      elseif ($wxCasa.ContainsKey($key)) { $c = $wxCasa[$key]; $pw = [pscustomobject]@{ Nombre='Amieva'; Code=$c.Code; TMax=$c.TMax; TMin=$c.TMin; Rain=$c.Rain } }
+      if ($pw) {
+        $pico = (Get-WeatherIcon $pw.Code)
+        $dayWx[$i] = [pscustomobject]@{ Icon=$pico[0]; Texto=$pico[1]; TMax=$pw.TMax; TMin=$pw.TMin; Rain=$pw.Rain; Nombre=$pw.Nombre }
       }
     }
   } catch { }
@@ -407,7 +436,7 @@ function Build-Html {
       [void]$itinHtml.Append("<a class='dline gas' href='$mp' target='_blank'><span class='dline-ic'>&#9981;</span><span class='dline-tx'><b>$(HtmlEnc $r.Rotulo)</b><small>$(HtmlEnc $r.Municipio) &middot; $dv</small></span><span class='dline-v'>$(([double]$r.Precio).ToString('0.000',$INV))<small>&euro;/L</small></span></a>")
     }
     if ($wx) {
-      [void]$itinHtml.Append("<div class='dline'><span class='dline-ic'>$($wx.Icon)</span><span class='dline-tx'><b>Tiempo</b><small>$(HtmlEnc $wx.Texto)</small></span><span class='dline-v'>$($wx.TMax)&deg;/$($wx.TMin)&deg;<small>&#127783;&#65039; $($wx.Rain)%</small></span></div>")
+      [void]$itinHtml.Append("<div class='dline'><span class='dline-ic'>$($wx.Icon)</span><span class='dline-tx'><b>Tiempo en $(HtmlEnc $wx.Nombre)</b><small>$(HtmlEnc $wx.Texto)</small></span><span class='dline-v'>$($wx.TMax)&deg;/$($wx.TMin)&deg;<small>&#127783;&#65039; $($wx.Rain)%</small></span></div>")
     }
     [void]$itinHtml.Append("<div class='meals'>")
     [void]$itinHtml.Append("<div class='meal'><span class='meal-l'>&#127869; Desayuno</span><span class='ed' data-k='d$iDia-de'>$(HtmlEnc $dd.desayuno)</span></div>")
@@ -437,7 +466,7 @@ function Build-Html {
     [void]$hoyHtml.Append("<div class='card hoy spot'><div class='hoy-eyebrow'>&#9733; Lo de hoy &middot; dia $todayIdx de $($Data.dias.Count - 1)</div>")
     [void]$hoyHtml.Append("<div class='hoy-title'>$(HtmlEnc $ttitle)</div><div class='hoy-teaser'>$(HtmlEnc $tteaser)</div>")
     foreach ($g in @($ecos | Where-Object { $_.Dia -eq $todayIdx -and $_.Reco })) { $r=$g.Reco; [void]$hoyHtml.Append("<div class='hoy-line'>&#9981; $(HtmlEnc $r.Rotulo) &middot; $(([double]$r.Precio).ToString('0.000',$INV)) &euro;/L</div>") }
-    if ($dayWx.ContainsKey($todayIdx)) { $w=$dayWx[$todayIdx]; [void]$hoyHtml.Append("<div class='hoy-line'>$($w.Icon) $($w.TMax)&deg;/$($w.TMin)&deg; &middot; $($w.Rain)% lluvia</div>") }
+    if ($dayWx.ContainsKey($todayIdx)) { $w=$dayWx[$todayIdx]; [void]$hoyHtml.Append("<div class='hoy-line'>$($w.Icon) $(HtmlEnc $w.Nombre): $($w.TMax)&deg;/$($w.TMin)&deg; &middot; $($w.Rain)% lluvia</div>") }
     [void]$hoyHtml.Append("<button class='hoy-btn' onclick='irAlDia($todayIdx)'>Ver el dia completo &rsaquo;</button></div>")
   }
   elseif ($todayIdx -eq 99) {
@@ -750,7 +779,7 @@ function Build-Html {
     <h2>El tiempo en Amieva</h2>
     <div class="card">
       <div class="wgrid">$($weatherHtml.ToString())</div>
-      $(if (-not $hayTiempo) { "<p class='hint' style='margin:10px 0 0'>La prevision aparece cuando faltan ~15 dias.</p>" } else { "<p class='hint' style='margin:10px 0 0'>Maximas/minimas y probabilidad de lluvia. Se actualiza sola cada dia en la nube (no hace falta tu PC).</p>" })
+      $(if (-not $hayTiempo) { "<p class='hint' style='margin:10px 0 0'>La prevision aparece cuando faltan ~15 dias.</p>" } else { "<p class='hint' style='margin:10px 0 0'>Maximas/minimas y lluvia en Amieva (la base). El tiempo de cada sitio del dia (Fuentes De, Gijon, Covadonga...) esta en su dia, en la pestana Plan. Se actualiza solo cada dia.</p>" })
     </div>
 
     <h2>Antes de salir</h2>
@@ -875,7 +904,7 @@ function Build-Html {
         $($tramosHtml.ToString())
         <tr style="font-weight:700"><td>Total ida</td><td class="num">$($kmIda.ToString('0',$INV))</td><td class="num">$(if ($cocheOk) { $litrosIda.ToString('0.0',$INV) } else { '?' })</td><td class="num">$(if ($cocheOk) { "$($costeIda.ToString('0.00',$INV)) &euro;" } else { 'por confirmar' })</td></tr>
       </table>
-      <p class="hint" style="margin-top:12px">$(if ($cocheOk) { "Con el deposito lleno aguantas ~$autonomia km." } else { "La autonomia y el coste se calcularan al confirmar los datos del Clio." }) Cerca de Amieva no hay gasolineras: reposta antes (ver estrategia en Gasolina).</p>
+      <p class="hint" style="margin-top:12px">$(if ($cocheOk) { "Deposito 55 L, consumo real ~$($consumo.ToString('0.#',$INV)) L/100 (4 personas + equipaje + puertos): autonomia ~$autonomia km. Saliendo LLENO de Logrono llegas a Amieva (~500 km, ~35 L) SIN repostar; Burgos y Guardo son colchon opcional." } else { "La autonomia y el coste se calcularan al confirmar los datos del Clio." }) En Amieva no hay surtidor (el mas cercano, Cangas de Onis ~20 km).</p>
     </div>
     $($condHtml.ToString())
   </section>

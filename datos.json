@@ -4,11 +4,22 @@
   "fechaInicio": "2026-07-11",
   "casa": "Casa en Asturias (Amieva) - Anfitrion: Jorge - Entrada sab 11 despues 17:00, salida sab 18 antes 11:00",
   "casaCoord": { "lat": 43.2667, "lon": -5.0667 },
+  "tiempoPuntos": [
+    { "dia": 0, "nombre": "Amieva", "lat": 43.2667, "lon": -5.0667 },
+    { "dia": 1, "nombre": "Arriondas", "lat": 43.387, "lon": -5.18 },
+    { "dia": 2, "nombre": "Piraguismo (Arriondas)", "lat": 43.385, "lon": -5.13 },
+    { "dia": 3, "nombre": "Fuentes De (Picos)", "lat": 43.1486, "lon": -4.8131 },
+    { "dia": 4, "nombre": "Covadonga", "lat": 43.3083, "lon": -5.0556 },
+    { "dia": 5, "nombre": "Gijon (costa)", "lat": 43.5357, "lon": -5.6615 },
+    { "dia": 6, "nombre": "Mirador del Fitu", "lat": 43.4333, "lon": -5.2333 },
+    { "dia": 7, "nombre": "Llanes (costa)", "lat": 43.4214, "lon": -4.7561 }
+  ],
   "coche": {
-    "modelo": "Renault Clio (modelo antiguo)",
-    "combustible": "Gasolina",
-    "consumoL100": null,
-    "depositoL": null
+    "modelo": "Renault Clio III 1.2 16V 75 CV (2008)",
+    "combustible": "Gasolina 95",
+    "consumoL100": 7.0,
+    "depositoL": 55,
+    "autonomiaKm": 700
   },
   "viajeros": ["Yo", "Daniel", "David", "Diego"],
   "gasolinaPagador": "Yo",
@@ -24,7 +35,7 @@
     "messagingSenderId": "339209856321",
     "appId": "1:339209856321:web:9fb9d73fc7512321d72dc0"
   },
-  "rutaNota": "Peajes: por AUTOPISTA ~30 EUR ida y vuelta (peajes incluidos). Por AUTOVIA (gratis) 10-15 EUR pero 1 h mas de viaje. -- ESTRATEGIA GASOLINA: llena en Alcampo de Logrono (lo mas barato) y da un ultimo repostaje al SALIR de Burgos. NO se reposta en Riano (caro). Ruta por Oseja: ultimo deposito barato en Guardo (Cobasguar ~1,42 EUR/L; ojo horario: domingo cerrado, sabado hasta 15h; alternativa Avia 6-22h). Plan B (Reinosa/Llanes por la costa): con Logrono + Burgos deberia llegar; si hace falta, repostar por la costa o al llegar a Cangas de Onis (ESC Petroleos). En Amieva NO hay surtidor: el mas cercano es Cangas de Onis (~20 km, 6-22h). En Asturias llena barato en Ballenoil de Arriondas (dias 1-3). A la vuelta, El Centro (Llanes) ANTES de comer, viniendo de Ribadesella.",
+  "rutaNota": "Peajes: por AUTOPISTA ~30 EUR ida y vuelta (peajes incluidos). Por AUTOVIA (gratis) 10-15 EUR pero 1 h mas de viaje. -- ESTRATEGIA GASOLINA: llena a TOPE en Alcampo de Logrono (lo mas barato): con el deposito lleno (55 L, ~700 km) llegas a Amieva (~500 km, ~35 L) SIN repostar. Burgos y Guardo (Cobasguar ~1,42 EUR/L; domingo cerrado, sabado hasta 15h; alternativa Avia 6-22h) quedan como colchon opcional. NO se reposta en Riano (caro). Plan B (Reinosa/Llanes por la costa): con Logrono + Burgos deberia llegar; si hace falta, repostar por la costa o al llegar a Cangas de Onis (ESC Petroleos). En Amieva NO hay surtidor: el mas cercano es Cangas de Onis (~20 km, 6-22h). En Asturias llena barato en Ballenoil de Arriondas (dias 1-3). A la vuelta, El Centro (Llanes) ANTES de comer, viniendo de Ribadesella.",
   "avisoIncendio": "La N-625 por Oseja de Sajambre puede estar CORTADA por un incendio. La ruta se decide el DIA 10 segun el parte de la DGT. Ruta principal: por Oseja/Beyos. Plan B (si esta cortada): rodear por Aguilar de Campoo, Reinosa y Llanes (costa). Usa los botones de abajo.",
   "navPrincipal": "https://www.google.com/maps/dir/?api=1&origin=Zaragoza&destination=43.241519,-5.073394&waypoints=Logroño|Restaurante+Abrasamer+Villatoro+Burgos|Guardo|Riaño,+León&travelmode=driving&avoid=tolls",
   "navSecundario": "https://www.google.com/maps/dir/?api=1&origin=Zaragoza&destination=43.241519,-5.073394&waypoints=Logroño|Restaurante+Abrasamer+Villatoro+Burgos|Aguilar+de+Campoo|Reinosa|Llanes&travelmode=driving&avoid=tolls",
@@ -39,10 +50,10 @@
     { "nombre": "Ribadesella - Llanes (dia de vuelta)", "prov": "33", "lat": 43.4500, "lon": -4.9000, "radioKm": 28, "dia": 7 }
   ],
   "tramosIda": [
-    { "de": "Zaragoza", "a": "Logrono (Alcampo Parque Rioja)", "km": 175 },
-    { "de": "Logrono", "a": "Burgos (parar a comer)", "km": 150 },
-    { "de": "Burgos", "a": "Zona de montana (Guardo/Oseja o Reinosa por el Plan B)", "km": 200 },
-    { "de": "Ultimo tramo", "a": "Amieva (no hay surtidor; el mas cercano, Cangas de Onis ~20 km)", "km": 80 }
+    { "de": "Zaragoza", "a": "Logrono (Alcampo, llenar a tope)", "km": 175 },
+    { "de": "Logrono", "a": "Burgos (parar a comer)", "km": 120 },
+    { "de": "Burgos", "a": "Guardo (base de la montana, ruta Oseja)", "km": 150 },
+    { "de": "Guardo", "a": "Amieva (por el Ponton y los Beyos)", "km": 55 }
   ],
   "reservas": [
     "Reservar piraguismo en Cangas Aventura (35 EUR/persona, dura 2 a 4.5 h)",
