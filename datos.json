@@ -4,6 +4,8 @@
   "fechaInicio": "2026-07-11",
   "casa": "Casa en Asturias (Amieva) - Anfitrion: Jorge - Entrada sab 11 despues 17:00, salida sab 18 antes 11:00",
   "casaCoord": { "lat": 43.2667, "lon": -5.0667 },
+  "casaCoordTexto": "43.241519, -5.073394",
+  "casaLlevame": "https://www.google.com/maps/dir/?api=1&destination=43.241519,-5.073394&travelmode=driving",
   "tiempoPuntos": [
     { "dia": 0, "nombre": "Amieva", "lat": 43.2667, "lon": -5.0667 },
     { "dia": 1, "nombre": "Arriondas", "lat": 43.387, "lon": -5.18 },
@@ -37,6 +39,8 @@
   },
   "rutaNota": "Peajes: por AUTOPISTA ~30 EUR ida y vuelta (peajes incluidos). Por AUTOVIA (gratis) 10-15 EUR pero 1 h mas de viaje. -- ESTRATEGIA GASOLINA: llena a TOPE en Alcampo de Logrono (lo mas barato): con el deposito lleno (55 L, ~700 km) llegas a Amieva (~500 km, ~35 L) SIN repostar. Burgos y Guardo (Cobasguar ~1,42 EUR/L; domingo cerrado, sabado hasta 15h; alternativa Avia 6-22h) quedan como colchon opcional. NO se reposta en Riano (caro). Plan B (Reinosa/Llanes por la costa): con Logrono + Burgos deberia llegar; si hace falta, repostar por la costa o al llegar a Cangas de Onis (ESC Petroleos). En Amieva NO hay surtidor: el mas cercano es Cangas de Onis (~20 km, 6-22h). En Asturias llena barato en Ballenoil de Arriondas (dias 1-3). A la vuelta, El Centro (Llanes) ANTES de comer, viniendo de Ribadesella.",
   "avisoIncendio": "La N-625 por Oseja de Sajambre puede estar CORTADA por un incendio. La ruta se decide el DIA 10 segun el parte de la DGT. Ruta principal: por Oseja/Beyos. Plan B (si esta cortada): rodear por Aguilar de Campoo, Reinosa y Llanes (costa). Usa los botones de abajo.",
+  "dgtUrl": "https://infocar.dgt.es/etraffic/",
+  "dgtNota": "Comprueba aqui si la N-625 (Desfiladero de los Beyos) esta abierta antes de salir. Si esta cortada, usa el Plan B por la costa.",
   "navPrincipal": "https://www.google.com/maps/dir/?api=1&origin=Zaragoza&destination=43.241519,-5.073394&waypoints=Logroño|Restaurante+Abrasamer+Villatoro+Burgos|Guardo|Riaño,+León&travelmode=driving&avoid=tolls",
   "navSecundario": "https://www.google.com/maps/dir/?api=1&origin=Zaragoza&destination=43.241519,-5.073394&waypoints=Logroño|Restaurante+Abrasamer+Villatoro+Burgos|Aguilar+de+Campoo|Reinosa|Llanes&travelmode=driving&avoid=tolls",
   "paradas": [
@@ -61,6 +65,15 @@
     "Reservar bus a los Lagos de Covadonga (9 EUR/persona, alsa.es o buslagoscovadonga.es)",
     "Preguntar a Jorge que hay en la casa (sabanas, menaje, etc.)",
     "Repostar lleno antes de subir a Amieva (en Amieva no hay surtidor; el mas cercano, Cangas de Onis ESC Petroleos ~20 km)"
+  ],
+  "probarAsturias": [
+    "Fabada asturiana",
+    "Cachopo",
+    "Sidra (escanciada)",
+    "Queso Cabrales",
+    "Queso Gamoneu",
+    "Arroz con leche",
+    "Bollos prenaos"
   ],
   "sitios": [
     { "nombre": "Casa en Amieva", "lat": 43.2667, "lon": -5.0667, "dia": 0 },

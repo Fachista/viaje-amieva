@@ -486,6 +486,8 @@ function Build-Html {
   if ($checklistJs -notmatch '^\[') { $checklistJs = "[$checklistJs]" }
   $reservasJs  = ($Data.reservas  | ConvertTo-Json -Compress)
   if ($reservasJs -notmatch '^\[') { $reservasJs = "[$reservasJs]" }
+  $probarJs = if ($Data.PSObject.Properties['probarAsturias']) { ($Data.probarAsturias | ConvertTo-Json -Compress) } else { '[]' }
+  if ($probarJs -notmatch '^\[') { $probarJs = "[$probarJs]" }
   # compra: aplanar a [{item,grupo}] respetando el orden de los grupos
   $compraArr = @()
   foreach ($g in $Data.compra.PSObject.Properties) {
@@ -729,6 +731,10 @@ function Build-Html {
   .navbtn.a{background:var(--grad);color:#fff;box-shadow:0 8px 16px -8px rgba(59,91,255,.6)}
   .navbtn.a:active{transform:scale(.99)}
   .navbtn.b{background:var(--card-2);color:var(--ac-ink);border:1px solid var(--ac)}
+  .coordrow{display:flex;align-items:center;gap:8px;margin-top:10px}
+  .coordrow code{flex:1;min-width:0;background:var(--card-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--ink);overflow:auto;white-space:nowrap}
+  .copybtn{flex:none;background:var(--acs);color:var(--ac-ink);border:none;border-radius:8px;padding:8px 13px;font-weight:800;font-size:12.5px;cursor:pointer;white-space:nowrap}
+  .copybtn.ok{background:var(--gds);color:var(--gd-ink)}
   .tips{list-style:none;margin:0;padding:0}
   .tips li{position:relative;padding:9px 0 9px 22px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-soft);line-height:1.5}
   .tips li:first-child{border-top:none}
@@ -765,6 +771,7 @@ function Build-Html {
       <svg class="mtn" viewBox="0 0 780 62" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,62 L0,34 L90,12 L180,36 L270,6 L370,38 L470,16 L560,40 L650,10 L730,34 L780,20 L780,62 Z" fill="rgba(255,255,255,.16)"/><path d="M0,62 L0,48 L120,28 L220,48 L320,24 L430,50 L540,30 L650,48 L740,30 L780,44 L780,62 Z" fill="rgba(255,255,255,.28)"/></svg>
     </div>
     $(if ($Data.PSObject.Properties['avisoIncendio'] -and $Data.avisoIncendio) { "<div class='card aviso'><span class='aviso-ic'>&#9888;&#65039;</span><div><div class='aviso-t'>Aviso de ruta &middot; incendio</div>$(HtmlEnc $Data.avisoIncendio)</div></div>" })
+    $(if ($Data.PSObject.Properties['dgtUrl'] -and $Data.dgtUrl) { "<div class='card' style='padding:14px'><div class='hint' style='margin:0 0 9px'>$(HtmlEnc $Data.dgtNota)</div><a class='navbtn b' href='$(HtmlEnc $Data.dgtUrl)' target='_blank' rel='noopener' style='margin:0'>&#128679;&#65039; Estado de la N-625 (DGT) &rsaquo;</a></div>" })
     $(if ($Data.PSObject.Properties['navPrincipal'] -and $Data.navPrincipal) { "<div class='card navcard'><div class='hoy-eyebrow'>&#128663; Navegacion GPS (ida)</div><div class='hint' style='margin:6px 0 4px'>Un toque y arranca Google Maps. La principal es por Oseja; si el incendio corta la N-625, usa el Plan B (por Reinosa y Llanes).</div><a class='navbtn a' href='$(HtmlEnc $Data.navPrincipal)' target='_blank' rel='noopener'>&#9654; Iniciar ruta principal &middot; por Oseja</a><a class='navbtn b' href='$(HtmlEnc $Data.navSecundario)' target='_blank' rel='noopener'>&#9654; Plan B &middot; por Reinosa y Llanes (si corta el incendio)</a></div>" })
     <div class="kpis">
       <div class="kpi"><span class="ki">&#128663;</span><div class="v" style="$(if(-not $cocheOk){'font-size:15px;color:var(--wn)'})">$autonomiaTxt</div><div class="l">autonomia deposito lleno</div></div>
@@ -838,12 +845,20 @@ function Build-Html {
 
   <!-- PLAN -->
   <section id="t-plan" class="tab">
-    <div class="card"><div class="hoy-eyebrow">&#127968; La casa</div><div class="mut" style="font-size:13.5px;margin-top:4px">$(HtmlEnc $Data.casa)</div></div>
+    <div class="card"><div class="hoy-eyebrow">&#127968; La casa</div>
+      <div class="mut" style="font-size:13.5px;margin-top:4px">$(HtmlEnc $Data.casa)</div>
+      $(if ($Data.PSObject.Properties['casaCoordTexto'] -and $Data.casaCoordTexto) { "<div class='coordrow'><code id='casacoord'>$(HtmlEnc $Data.casaCoordTexto)</code><button class='copybtn' onclick='copiarCasa(this)'>Copiar</button></div>" })
+      $(if ($Data.PSObject.Properties['casaLlevame'] -and $Data.casaLlevame) { "<a class='navbtn a' href='$(HtmlEnc $Data.casaLlevame)' target='_blank' rel='noopener' style='margin-top:10px'>&#128205; Llevame a casa (Google Maps)</a>" })
+    </div>
+    <h2>Notas de la casa (lo que diga Jorge)</h2>
+    <div class="card"><textarea id="notas-casa" placeholder="WiFi, calefaccion / agua caliente, donde se tira la basura, aparcamiento, cualquier instruccion de la casa..."></textarea></div>
     <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <span class="hint" style="margin:0">El viaje dia a dia. Toca un dia para ver su <b>plan, gasolinera, tiempo, comidas y sitios</b> juntos. Con <b>Editar</b> cambias los textos (se sincroniza con tu copiloto).</span>
       <span style="display:flex;gap:8px"><button id="resetEdit" class="reset" style="display:none;margin:0" onclick="resetEdits()">Restaurar</button><button id="editBtn" class="add" style="padding:8px 14px" onclick="toggleEdit()">&#9999;&#65039; Editar</button></span>
     </div>
     $($itinHtml.ToString())
+    <h2>Probar si o si en Asturias</h2>
+    <div class="card"><p class="hint" style="margin:0 0 6px">Comida y bebida tipica para no volver sin probarla. Marca lo que vayais probando.</p><div id="probar-list"></div></div>
   </section>
 
   <!-- LISTAS (preparativos + reservas + maleta + compra + notas) -->
@@ -931,6 +946,7 @@ function Build-Html {
 const VIAJEROS = __VIAJEROS__;
 const SEED_CHECK = __CHECK__;
 const SEED_RESERVAS = __RESERVAS__;
+const SEED_PROBAR = __PROBAR__;
 const SEED_COMPRA = __COMPRA__;
 const PAGADOR = __PAGADOR__;
 const FB_CFG = __FIREBASE__;
@@ -1155,7 +1171,30 @@ function renderRes(){
 
 /* ---- Notas ---- */
 const ta=document.getElementById('notas');
-ta.addEventListener('input', ()=>persist('notas', ta.value));
+if(ta) ta.addEventListener('input', ()=>persist('notas', ta.value));
+const taCasa=document.getElementById('notas-casa');
+if(taCasa) taCasa.addEventListener('input', ()=>persist('notasCasa', taCasa.value));
+
+/* ---- Copiar la coordenada de la casa al portapapeles ---- */
+function copiarCasa(btn){
+  var t=document.getElementById('casacoord'); if(!t) return;
+  var done=function(){ if(btn){ var o=btn.textContent; btn.textContent='Copiado!'; btn.classList.add('ok'); setTimeout(function(){ btn.textContent=o; btn.classList.remove('ok'); },1500); } };
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t.textContent).then(done, done); }
+  else { try{ var r=document.createRange(); r.selectNode(t); var s=window.getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand('copy'); s.removeAllRanges(); done(); }catch(e){} }
+}
+
+/* ---- Probar si o si en Asturias (lista marcable, compartida) ---- */
+let probar=[];
+function saveProbar(){ persist('probar', probar); }
+function toggleProbar(i){ probar[i].ok=!probar[i].ok; saveProbar(); renderProbar(); }
+function renderProbar(){
+  var list=document.getElementById('probar-list'); if(!list) return; list.innerHTML='';
+  probar.forEach(function(p,i){
+    var row=document.createElement('div'); row.className='chk-item';
+    row.innerHTML='<input type="checkbox" '+(p.ok?'checked':'')+' onchange="toggleProbar('+i+')"><span class="txt '+(p.ok?'done':'')+'">'+p.item+'</span>';
+    list.appendChild(row);
+  });
+}
 
 /* ---- Editar textos del plan (compartido) ---- */
 let editing=false, edits={};
@@ -1191,7 +1230,9 @@ bind('shared',   function(v){ shared=Array.isArray(v)?v:[]; renderSh(); },      
 bind('maleta',   function(v){ maleta=Array.isArray(v)?v:[]; renderMaleta(); },  SEED_CHECK.map(x=>({item:x,quien:'Comun',ok:false})));
 bind('compra',   function(v){ compra=Array.isArray(v)?v:[]; renderCompra(); },  SEED_COMPRA.map(x=>({item:x.item,grupo:x.grupo,ok:false})));
 bind('reservas', function(v){ reservas=Array.isArray(v)?v:[]; renderRes(); },   SEED_RESERVAS.map(x=>({item:x,ok:false})));
-bind('notas',    function(v){ if(document.activeElement!==ta) ta.value=(typeof v==='string')?v:''; }, '');
+bind('probar',   function(v){ probar=Array.isArray(v)?v:[]; renderProbar(); },  SEED_PROBAR.map(x=>({item:x,ok:false})));
+bind('notas',     function(v){ if(ta && document.activeElement!==ta) ta.value=(typeof v==='string')?v:''; }, '');
+bind('notasCasa', function(v){ if(taCasa && document.activeElement!==taCasa) taCasa.value=(typeof v==='string')?v:''; }, '');
 bindEdits();
 </script>
 '@
@@ -1206,7 +1247,7 @@ bindEdits();
     '<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>'
   } else { '' }
 
-  $script = $script.Replace('__VIAJEROS__', $viajerosJs).Replace('__CHECK__', $checklistJs).Replace('__RESERVAS__', $reservasJs).Replace('__COMPRA__', $compraJs).Replace('__PAGADOR__', ($pagador | ConvertTo-Json)).Replace('__FIREBASE__', $fbJs)
+  $script = $script.Replace('__VIAJEROS__', $viajerosJs).Replace('__CHECK__', $checklistJs).Replace('__RESERVAS__', $reservasJs).Replace('__PROBAR__', $probarJs).Replace('__COMPRA__', $compraJs).Replace('__PAGADOR__', ($pagador | ConvertTo-Json)).Replace('__FIREBASE__', $fbJs)
   $full = $html + "`r`n" + $fbScripts + "`r`n" + $script + "`r`n</body>`r`n</html>`r`n"
   $full | Set-Content -Path $HtmlPath -Encoding UTF8
 }
