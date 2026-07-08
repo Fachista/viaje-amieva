@@ -766,31 +766,16 @@ function Build-Html {
     </div>
     $(if ($Data.PSObject.Properties['avisoIncendio'] -and $Data.avisoIncendio) { "<div class='card aviso'><span class='aviso-ic'>&#9888;&#65039;</span><div><div class='aviso-t'>Aviso de ruta &middot; incendio</div>$(HtmlEnc $Data.avisoIncendio)</div></div>" })
     $(if ($Data.PSObject.Properties['navPrincipal'] -and $Data.navPrincipal) { "<div class='card navcard'><div class='hoy-eyebrow'>&#128663; Navegacion GPS (ida)</div><div class='hint' style='margin:6px 0 4px'>Un toque y arranca Google Maps. La principal es por Oseja; si el incendio corta la N-625, usa el Plan B (por Reinosa y Llanes).</div><a class='navbtn a' href='$(HtmlEnc $Data.navPrincipal)' target='_blank' rel='noopener'>&#9654; Iniciar ruta principal &middot; por Oseja</a><a class='navbtn b' href='$(HtmlEnc $Data.navSecundario)' target='_blank' rel='noopener'>&#9654; Plan B &middot; por Reinosa y Llanes (si corta el incendio)</a></div>" })
-    $($hoyHtml.ToString())
     <div class="kpis">
       <div class="kpi"><span class="ki">&#128663;</span><div class="v" style="$(if(-not $cocheOk){'font-size:15px;color:var(--wn)'})">$autonomiaTxt</div><div class="l">autonomia deposito lleno</div></div>
       <div class="kpi"><span class="ki">&#128176;</span><div class="v" style="$(if(-not $cocheOk){'font-size:15px;color:var(--wn)'})">$costeIVTxt</div><div class="l">gasolina ida y vuelta aprox</div></div>
       <div class="kpi"><span class="ki">&#128197;</span><div class="v">8</div><div class="l">dias de viaje</div></div>
       <div class="kpi"><span class="ki">&#9981;</span><div class="v">$($refPrice.ToString('0.000',$INV))</div><div class="l">&euro;/L mas barato ruta</div></div>
     </div>
-    <h2>Mejor sitio para repostar ahora</h2>
-    <div class="card"><div class="lead"><div class="t">mas barata de la ruta</div>$cheapTxt</div></div>
-
     <h2>El tiempo en Amieva</h2>
     <div class="card">
       <div class="wgrid">$($weatherHtml.ToString())</div>
       $(if (-not $hayTiempo) { "<p class='hint' style='margin:10px 0 0'>La prevision aparece cuando faltan ~15 dias.</p>" } else { "<p class='hint' style='margin:10px 0 0'>Maximas/minimas y lluvia en Amieva (la base). El tiempo de cada sitio del dia (Fuentes De, Gijon, Covadonga...) esta en su dia, en la pestana Plan. Se actualiza solo cada dia.</p>" })
-    </div>
-
-    <h2>Antes de salir</h2>
-    <div class="card"><div id="res-list"></div></div>
-
-    <h2>Notas</h2>
-    <div class="card"><textarea id="notas" placeholder="Apunta aqui cualquier cosa: ideas, lo que falta, lo que diga Jorge..."></textarea></div>
-
-    <h2>La casa</h2>
-    <div class="card">
-      <div class="mut" style="font-size:14px">$(HtmlEnc $Data.casa)</div>
     </div>
 
     <details class="card fold">
@@ -801,6 +786,8 @@ function Build-Html {
 
   <!-- GASOLINA -->
   <section id="t-gas" class="tab">
+    <h2>Mejor sitio para repostar ahora</h2>
+    <div class="card"><div class="lead"><div class="t">mas barata de la ruta</div>$cheapTxt</div></div>
     <h2>Donde repostar (95)</h2>
     <p class="hint" style="margin:0 2px 10px">En cada parada te marco la mejor opcion teniendo en cuenta el desvio: si una mas barata esta lejos y no compensa el gasto de ir, no la recomiendo. Calculo pensando en repostar unos $($litros.ToString('0',$INV)) L.</p>
     <div class="card" style="padding:14px">
@@ -851,6 +838,7 @@ function Build-Html {
 
   <!-- PLAN -->
   <section id="t-plan" class="tab">
+    <div class="card"><div class="hoy-eyebrow">&#127968; La casa</div><div class="mut" style="font-size:13.5px;margin-top:4px">$(HtmlEnc $Data.casa)</div></div>
     <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <span class="hint" style="margin:0">El viaje dia a dia. Toca un dia para ver su <b>plan, gasolinera, tiempo, comidas y sitios</b> juntos. Con <b>Editar</b> cambias los textos (se sincroniza con tu copiloto).</span>
       <span style="display:flex;gap:8px"><button id="resetEdit" class="reset" style="display:none;margin:0" onclick="resetEdits()">Restaurar</button><button id="editBtn" class="add" style="padding:8px 14px" onclick="toggleEdit()">&#9999;&#65039; Editar</button></span>
@@ -858,8 +846,21 @@ function Build-Html {
     $($itinHtml.ToString())
   </section>
 
-  <!-- LISTAS (maleta + compra) -->
+  <!-- LISTAS (preparativos + reservas + maleta + compra + notas) -->
   <section id="t-listas" class="tab">
+    <h2>Preparativos</h2>
+    <div class="card">
+      <div class="rings">
+        <div class="ring"><svg viewBox="0 0 44 44"><circle class="ring-bg" cx="22" cy="22" r="18"/><circle class="ring-fg" id="ring-res" cx="22" cy="22" r="18"/></svg><div class="ring-c" id="rv-res">0/0</div><div class="ring-l">Reservas</div></div>
+        <div class="ring"><svg viewBox="0 0 44 44"><circle class="ring-bg" cx="22" cy="22" r="18"/><circle class="ring-fg" id="ring-mal" cx="22" cy="22" r="18"/></svg><div class="ring-c" id="rv-mal">0/0</div><div class="ring-l">Maleta</div></div>
+        <div class="ring"><svg viewBox="0 0 44 44"><circle class="ring-bg" cx="22" cy="22" r="18"/><circle class="ring-fg" id="ring-com" cx="22" cy="22" r="18"/></svg><div class="ring-c" id="rv-com">0/0</div><div class="ring-l">Compra</div></div>
+      </div>
+    </div>
+
+    <h2>Antes de salir (reservas)</h2>
+    <div class="card"><div id="res-list"></div></div>
+
+    <h2>Maleta y compra</h2>
     <div class="chips" id="l-tabs">
       <button class="on" onclick="showLista('maleta',this)">Maleta</button>
       <button onclick="showLista('compra',this)">Compra</button>
@@ -893,6 +894,9 @@ function Build-Html {
         <div id="c-list"></div>
       </div>
     </div>
+
+    <h2>Notas</h2>
+    <div class="card"><textarea id="notas" placeholder="Apunta aqui cualquier cosa (ideas, telefonos, frecuencias de radio...)."></textarea></div>
   </section>
 
   <!-- COCHE (autonomia + conduccion) -->
