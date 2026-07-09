@@ -550,6 +550,9 @@ function Build-Html {
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Viaje Amieva">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>$(HtmlEnc $Data.titulo)</title>
 <style>
   :root{
@@ -956,19 +959,24 @@ const load=(k,def)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return (
 /* Almacen compartido: Firebase si hay config; si no, solo este dispositivo */
 let DB=null;
 try{ if(FB_CFG && FB_CFG.databaseURL && typeof firebase!=='undefined'){ firebase.initializeApp(FB_CFG); DB=firebase.database().ref('viaje'); } }catch(e){ DB=null; }
+function lsGet(key,def){ try{ var v=JSON.parse(localStorage.getItem('viajeAmieva_'+key)); return (v===null||v===undefined)?def:v; }catch(e){ return def; } }
+function lsSet(key,value){ try{ localStorage.setItem('viajeAmieva_'+key, JSON.stringify(value)); }catch(e){} }
+/* Offline-first: siempre guardamos una copia local para que funcione sin red (la casa
+   no tiene wifi). Firebase, cuando hay conexion, sincroniza entre los dos moviles. */
 function bind(key, apply, seed){
+  apply(lsGet(key, seed));
   if(DB){
     DB.child(key).on('value', function(s){
       var raw=s.val(), v;
-      if(raw===null||raw===undefined){ v=seed; try{ DB.child(key).set(JSON.stringify(seed)); }catch(e){} }
-      else { try{ v=JSON.parse(raw); }catch(e){ v=seed; } }
-      apply(v);
+      if(raw===null||raw===undefined){ v=lsGet(key, seed); try{ DB.child(key).set(JSON.stringify(v)); }catch(e){} }
+      else { try{ v=JSON.parse(raw); }catch(e){ v=lsGet(key, seed); } }
+      lsSet(key, v); apply(v);
     });
-  } else { apply(load('viajeAmieva_'+key, seed)); }
+  }
 }
 function persist(key, value){
+  lsSet(key, value);
   if(DB){ try{ DB.child(key).set(JSON.stringify(value)); }catch(e){} }
-  else { localStorage.setItem('viajeAmieva_'+key, JSON.stringify(value)); }
 }
 function setSync(t,on){ var b=document.getElementById('syncBadge'); if(b){ b.innerHTML=t; b.className='pill '+(on?'ok':'warn'); } }
 if(DB){
@@ -1209,15 +1217,16 @@ function toggleEdit(){
 /* Las ediciones se guardan CAMPO POR CAMPO (nodo objeto en Firebase), asi dos
    personas editando campos distintos no se pisan y no se pierde nada. */
 function saveEdit(k,v){
-  if(DB){ DB.child('edits').child(k).set(v); }
-  else { edits[k]=v; localStorage.setItem('viajeAmieva_edits', JSON.stringify(edits)); }
+  edits[k]=v;
+  lsSet('edits', edits);
+  if(DB){ try{ DB.child('edits').child(k).set(v); }catch(e){} }
 }
 function bindEdits(){
+  var lv = lsGet('edits', {});
+  edits = (lv && typeof lv==='object' && !Array.isArray(lv)) ? lv : {};
+  applyEdits();
   if(DB){
-    DB.child('edits').on('value', function(s){ var v=s.val(); edits=(v && typeof v==='object' && !Array.isArray(v))?v:{}; applyEdits(); });
-  } else {
-    try{ var lv=JSON.parse(localStorage.getItem('viajeAmieva_edits')); edits=(lv && typeof lv==='object')?lv:{}; }catch(e){ edits={}; }
-    applyEdits();
+    DB.child('edits').on('value', function(s){ var v=s.val(); edits=(v && typeof v==='object' && !Array.isArray(v))?v:{}; lsSet('edits', edits); applyEdits(); });
   }
 }
 document.addEventListener('input', e=>{ const t=e.target; if(t.classList && t.classList.contains('ed')){ edits[t.dataset.k]=t.innerText; saveEdit(t.dataset.k, t.innerText); } });
@@ -1248,8 +1257,98 @@ bindEdits();
   } else { '' }
 
   $script = $script.Replace('__VIAJEROS__', $viajerosJs).Replace('__CHECK__', $checklistJs).Replace('__RESERVAS__', $reservasJs).Replace('__PROBAR__', $probarJs).Replace('__COMPRA__', $compraJs).Replace('__PAGADOR__', ($pagador | ConvertTo-Json)).Replace('__FIREBASE__', $fbJs)
-  $full = $html + "`r`n" + $fbScripts + "`r`n" + $script + "`r`n</body>`r`n</html>`r`n"
+  $swReg = "<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>"
+  $full = $html + "`r`n" + $fbScripts + "`r`n" + $script + "`r`n" + $swReg + "`r`n</body>`r`n</html>`r`n"
   $full | Set-Content -Path $HtmlPath -Encoding UTF8
+
+  # PWA offline: manifest + service worker (se escriben junto a index.html)
+  Write-Manifest
+  Write-ServiceWorker
+}
+
+function Write-Manifest {
+  $manifest = @'
+{
+  "name": "Viaje a Amieva (Asturias)",
+  "short_name": "Amieva",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a1020",
+  "theme_color": "#3b5bff",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
+'@
+  $manifest | Set-Content -Path (Join-Path $Root 'manifest.json') -Encoding UTF8
+}
+
+function Write-ServiceWorker {
+  $sw = @'
+/* Service worker de Viaje Amieva: funciona 100% sin conexion (la casa no tiene wifi). */
+var CACHE = 'viaje-amieva-v1';
+var CORE = [
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
+];
+var CDN = [
+  'https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js'
+];
+
+self.addEventListener('install', function(e){
+  self.skipWaiting();
+  e.waitUntil(caches.open(CACHE).then(function(c){
+    var p = c.addAll(CORE.map(function(u){ return new Request(u, {cache:'reload'}); })).catch(function(){});
+    // CDN de Firebase (cross-origin, no-cors): mejor esfuerzo
+    var q = Promise.all(CDN.map(function(u){
+      return fetch(new Request(u, {mode:'no-cors'})).then(function(r){ return c.put(u, r); }).catch(function(){});
+    }));
+    return Promise.all([p, q]);
+  }));
+});
+
+self.addEventListener('activate', function(e){
+  e.waitUntil(caches.keys().then(function(keys){
+    return Promise.all(keys.filter(function(k){ return k !== CACHE; }).map(function(k){ return caches.delete(k); }));
+  }).then(function(){ return self.clients.claim(); }));
+});
+
+self.addEventListener('fetch', function(e){
+  var req = e.request;
+  if(req.method !== 'GET'){ return; }
+  var url;
+  try { url = new URL(req.url); } catch(err) { return; }
+  // Trafico de Firebase Realtime DB: siempre red, nunca cache (offline falla en silencio)
+  if(url.hostname.indexOf('firebasedatabase.app') >= 0 || url.hostname.indexOf('firebaseio.com') >= 0) { return; }
+  // Navegacion (abrir la app): sirve la cache al instante y actualiza por detras (SWR)
+  if(req.mode === 'navigate'){
+    e.respondWith(caches.open(CACHE).then(function(c){
+      return c.match('./index.html').then(function(cached){
+        var net = fetch(req).then(function(resp){ try{ c.put('./index.html', resp.clone()); }catch(e){} return resp; }).catch(function(){ return cached; });
+        return cached || net;
+      });
+    }));
+    return;
+  }
+  // Resto (iconos, manifest, scripts de Firebase): cache primero, red de respaldo
+  e.respondWith(caches.match(req).then(function(cached){
+    if(cached){ return cached; }
+    return fetch(req).then(function(resp){
+      try{ var copy = resp.clone(); caches.open(CACHE).then(function(c){ c.put(req, copy); }); }catch(e){}
+      return resp;
+    }).catch(function(){ return cached; });
+  }));
+});
+'@
+  $sw | Set-Content -Path (Join-Path $Root 'sw.js') -Encoding UTF8
 }
 
 # ---------------------------------------------------------------------------
